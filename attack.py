@@ -40,19 +40,19 @@ class Attack:
 
     def time_advance(self,dt):
         # 冷却减少
-        if self.attack_cd > 0:
-            self.attack_cd -= dt
-            self.attack_cd = max(self.attack_cd, 0)
-        if self.element_cd > 0:
-            self.element_cd -= dt
-            self.attack_cd = max(self.attack_cd, 0)
+        if self.current_attack_cd > 0:
+            self.current_attack_cd -= dt
+            self.current_attack_cd = max(self.current_attack_cd, 0)
+        if self.current_element_cd > 0:
+            self.current_element_cd -= dt
+            self.current_element_cd = max(self.current_element_cd, 0)
 
-    def is_elemented(self):
-        return self.element_cd > 0
+    def is_with_element(self):
+        return self.element_cd < 0.01
 
     def is_triggered(self, time):
         if not self.is_active:
             return False
-        if time < self.time_start or time > self.time_start + self.time_last or self.cd > 0:
+        if time < self.time_start or time > self.time_start + self.time_last or self.attack_cd > 0:
             return False
         return True

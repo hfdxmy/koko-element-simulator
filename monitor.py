@@ -59,10 +59,13 @@ class Monitor:
             for a in range(self.attack_num):
                 atk = self.attack_list[a]
                 if atk.is_triggered(self.time):
-                    reaction(self.target_list[0], atk, self.time)
-                    atk.cd = atk.time_cd
-                atk.cd -= dt
-
+                    atk.current_attack_cd = atk.attack_cd
+                    if atk.is_with_element(self):
+                        # 如果带元素
+                        reaction(self.target_list[0], atk, self.time)
+                        atk.current_element_cd = atk.element_cd
+                    else:
+                        # 如果不带元素，只检查协同触发和草核
             #  dendro-core check
             #  electro-hydro check
 
