@@ -1,0 +1,56 @@
+Traceback (most recent call last):
+  File "D:\Game\elemcalc\main.py", line 53, in OnInit
+    self.Frame = MainFrame()
+  File "D:\Game\elemcalc\main.py", line 18, in __init__
+    self.makeMenuBar()
+  File "D:\Game\elemcalc\main.py", line 33, in makeMenuBar
+    menuBar.Append(fileMenu, "&Help")
+wx._core.wxAssertionError: C++ assertion "!m_menuBar" failed at ..\..\src\common\menucmn.cpp(775) in wxMenuBase::Attach(): attaching menu twice?
+OnInit returned false, exiting...
+Traceback (most recent call last):
+  File "D:\Game\elemcalc\main.py", line 53, in OnInit
+    self.Frame = MainFrame()
+  File "D:\Game\elemcalc\main.py", line 18, in __init__
+    self.makeMenuBar()
+  File "D:\Game\elemcalc\main.py", line 33, in makeMenuBar
+    menuBar.Append(fileMenu, "&Help")
+wx._core.wxAssertionError: C++ assertion "!m_menuBar" failed at ..\..\src\common\menucmn.cpp(775) in wxMenuBase::Attach(): attaching menu twice?
+OnInit returned false, exiting...
+TypeError: OnAbout() takes 1 positional argument but 2 were given
+TypeError: OnAbout() takes 1 positional argument but 2 were given
+TypeError: OnExit() takes 1 positional argument but 2 were given
+TypeError: OnExit() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "D:\Game\elemcalc\main.py", line 58, in OnInit
+    self.Frame = MainFrame()
+  File "D:\Game\elemcalc\main.py", line 21, in __init__
+    box.Add(self.choice, 1, wx.EXPAND|wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+wx._core.wxAssertionError: C++ assertion "CheckSizerFlags(!((flags) & (wxALIGN_RIGHT | wxALIGN_CENTRE_HORIZONTAL | wxALIGN_BOTTOM | wxALIGN_CENTRE_VERTICAL)))" failed at ..\..\src\common\sizer.cpp(2294) in wxBoxSizer::DoInsert(): wxALIGN_RIGHT | wxALIGN_CENTRE_HORIZONTAL | wxALIGN_BOTTOM | wxALIGN_CENTRE_VERTICAL will be ignored in this sizer: wxEXPAND overrides alignment flags in box sizers
+
+DO NOT PANIC !!
+
+If you're an end user running a program not developed by you, please ignore this message, it is harmless, and please try reporting the problem to the program developers.
+
+You may also set WXSUPPRESS_SIZER_FLAGS_CHECK environment variable to suppress all such checks when running this program.
+
+If you're the developer, simply remove this flag from your code to avoid getting this message. You can also call wxSizerFlags::DisableConsistencyChecks() to globally disable all such checks, but this is strongly not recommended.
+OnInit returned false, exiting...
+D:\Game\elemcalc\main.py:32: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+D:\Game\elemcalc\main.py:32: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+D:\Game\elemcalc\main.py:32: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+D:\Game\elemcalc\main.py:35: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+D:\Game\elemcalc\main.py:34: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+D:\Game\elemcalc\main.py:34: wxPyDeprecationWarning: Call to deprecated item. Use Append instead.
+  fileMenu.AppendItem(runItem)
+Traceback (most recent call last):
+  File "D:\Game\elemcalc\main.py", line 62, in OnInit
+    self.Frame = MainFrame()
+  File "D:\Game\elemcalc\main.py", line 22, in __init__
+    gs.Add(wx.StaticText(panel, -1, style=wx.ALIGN_LEFT).SetLabel("���"), 0, wx.EXPAND)
+wx._core.wxAssertionError: C++ assertion ""window"" failed at ..\..\src\common\sizer.cpp(319) in wxSizerItem::DoSetWindow(): NULL window in wxSizerItem::SetWindow()
+OnInit returned false, exiting...
