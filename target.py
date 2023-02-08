@@ -1,4 +1,4 @@
-element_dict = {0: '水', 1: '火', 2: '冰', 3: '雷', 4: '草', 5: '冻', 6: '激', 7: '燃'}
+from const import ATTACH_ELEMENT_DICT
 
 
 class Target:
@@ -17,9 +17,9 @@ class Target:
 
     def element_string(self):
         string = ""
-        for i in range(8):
+        for i in [6, 7, 8, 5, 1, 2, 3, 4]:
             if self.element[i] > 0:
-                string += element_dict[i]
+                string += ATTACH_ELEMENT_DICT[i]
                 string += "%.1f" % (self.element[i])
         if string == "":
             string = "无元素附着"

@@ -42,11 +42,11 @@ def reaction(tgt, atk, time):
 
 
 class Monitor:
-    def __init__(self, max_time, target_num, attack_num):
+    def __init__(self, bs):  # bs short for basic setting
         self.time = 0
-        self.max_time = max_time
-        self.target_num = target_num
-        self.attack_num = attack_num
+        self.max_time = bs.max_time
+        self.target_num = bs.target_num
+        self.attack_num = bs.attack_num
 
         self.attack_list = [attack.Attack() for _ in range(attack_num)]
         self.target_list = [target.Target() for _ in range(target_num)]
@@ -66,6 +66,8 @@ class Monitor:
                         atk.current_element_cd = atk.element_cd
                     else:
                         # 如果不带元素，只检查协同触发和草核
+                        pass
+
             #  dendro-core check
             #  electro-hydro check
 
