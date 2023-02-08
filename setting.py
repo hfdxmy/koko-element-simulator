@@ -1,6 +1,6 @@
 import wx
 from validator import NumberValidator
-from const import ELEMENTS,BASIC_ELEMENT_DICT
+from const import ELEMENTS, BASIC_ELEMENT_DICT
 
 
 class AttackSetting:
@@ -28,7 +28,17 @@ class AttackSetting:
         self.bs.Add(self.input_time_last, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)  # 持续时间
         self.bs.Add(self.input_attack_cd, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)  # 攻击冷却
         self.bs.Add(self.input_element_cd, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)  # 附着冷却
-        self.bs.Add(wx.Button(parent, label='增加'), proportion=1, flag=wx.EXPAND | wx.ALL, border=5)  # 添加删除
+
+        # default value
+        self.input_is_active.SetValue(True)
+        self.input_name.SetValue('技能名称')
+        self.input_element.SetSelection(0)
+        self.input_element_mass.SetValue('1')
+        self.input_attack_mode.SetSelection(0)
+        self.input_time_start.SetValue('1')
+        self.input_time_last.SetValue('1')
+        self.input_attack_cd.SetValue('1')
+        self.input_element_cd.SetValue('0')
 
         self.setting_id = num
         self.is_active = False
@@ -44,18 +54,21 @@ class AttackSetting:
         pass
 
     def get_inputs(self):
-        self.is_active = self.input_is_active.GetValue()
-        self.name = self.input_name.GetValue()
-        self.element = self.input_element.GetString()
-        self.attack_mode = self.input_attack_mode.GetString()
         try:
+            self.is_active = self.input_is_active.GetValue()
+            self.name = self.input_name.GetValue()
+            self.element = self.input_element.GetString(self.input_attack_mode.GetSelection())
+            self.attack_mode = self.input_attack_mode.GetString(self.input_attack_mode.GetSelection())
             self.element_mass = float(self.input_element_mass.GetValue())
             self.time_start = float(self.input_time_start.GetValue())
             self.time_last = float(self.input_time_last.GetValue())
             self.attack_cd = float(self.input_attack_cd.GetValue())
             self.element_cd = float(self.input_element_cd.GetValue())
         except ValueError:
-            self.error_log('数值格式错误')
+            self.error_log('数值输入错误')
+            return False
+        except:
+            self.error_log('数据格式错误')
             return False
 
         if self.element_mass > 4:
@@ -68,8 +81,8 @@ class AttackSetting:
 
         return True
 
-    def error_log(self, a, info):
-        print('第%d条设置：“%s” %s' % (self.id, self.name, info))
+    def error_log(self, info):
+        print('第%d条设置：“%s” %s' % (self.setting_id, self.name, info))
 
     def remove(self):
         pass
@@ -82,6 +95,7 @@ class BasicSetting:
         self.bs.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="模拟时长(s)："),
                     flag=wx.EXPAND | wx.ALL, border=5)
         self.input_max_time = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 24))
+        self.input_max_time.SetValue('20')
         self.bs.Add(self.input_max_time, flag=wx.EXPAND | wx.ALL, border=5)
 
         self.max_time = 0

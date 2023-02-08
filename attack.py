@@ -38,7 +38,7 @@ class Attack:
         self.attack_cd = attack_cd
         self.element_cd = element_cd
 
-    def time_advance(self,dt):
+    def time_advance(self, dt):
         # 冷却减少
         if self.current_attack_cd > 0:
             self.current_attack_cd -= dt

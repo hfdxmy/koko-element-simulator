@@ -48,10 +48,12 @@ class Monitor:
         self.target_num = bs.target_num
         self.attack_num = bs.attack_num
 
-        self.attack_list = [attack.Attack() for _ in range(attack_num)]
-        self.target_list = [target.Target() for _ in range(target_num)]
+        self.attack_list = [attack.Attack() for _ in range(bs.attack_num)]
+        self.target_list = [target.Target() for _ in range(bs.target_num)]
 
-        self.steps = max_time / dt + 1
+        self.steps = bs.max_time / dt + 1
+
+        pass
 
     def simulate(self):
         for _ in range(self.steps):

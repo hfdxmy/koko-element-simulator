@@ -45,7 +45,7 @@ class MainFrame(wx.Frame):
 
         # .2 init setting title
         self.bs_setting_title = wx.BoxSizer()
-        for i in range(0, 11):
+        for i in range(0, 10):
             self.bs_setting_title.Add(wx.StaticText(self.panel, style=wx.ALIGN_CENTER, label=SETTING_TITLE[i]),
                                       proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
@@ -54,7 +54,6 @@ class MainFrame(wx.Frame):
         # .3 init setting list
         self.setting_num = 0
         self.attack_setting = []
-        self.add_setting()
         self.add_setting()
 
         # apply BoxSizer
@@ -102,6 +101,7 @@ class MainFrame(wx.Frame):
 
     def on_add_setting(self, event):
         self.add_setting()
+        self.bs_setting.Layout()
 
     def start_simulation(self, event):
         self.basic_setting.target_num = 1
@@ -113,7 +113,7 @@ class MainFrame(wx.Frame):
 
         for i in range(self.setting_num):
             if not self.attack_setting[i].get_inputs():
-                print('attack setting %d error' % i+1)
+                print('attack setting %d error' % (i+1))
                 return False
         # m = monitor.Monitor(max_time=self.max_time, target_num=1, attack_num=self.setting_num)
 
