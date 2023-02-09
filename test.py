@@ -24,6 +24,11 @@ class Example(wx.Frame):
         print (cb.GetLabel(), ' is clicked', cb.GetValue())
 
 
-ex = wx.App()
-Example(None, 'CheckBox Demo - www.yiibai.com')
-ex.MainLoop()
+# ex = wx.App()
+# Example(None, 'CheckBox Demo - www.yiibai.com')
+# ex.MainLoop()
+a = [1,2,3,4]
+print(a.pop(0))
+print(a.pop(0))
+print(a.pop(0))
+print(a.pop(0))

@@ -1,6 +1,7 @@
 import wx
 from validator import NumberValidator
 from const import ELEMENTS, BASIC_ELEMENT_DICT
+from attack import Attack
 
 
 class AttackSetting:
@@ -31,14 +32,14 @@ class AttackSetting:
 
         # default value
         self.input_is_active.SetValue(True)
-        self.input_name.SetValue('技能名称')
+        self.input_name.SetValue('技能')
         self.input_element.SetSelection(0)
         self.input_element_mass.SetValue('1')
         self.input_attack_mode.SetSelection(0)
-        self.input_time_start.SetValue('1')
-        self.input_time_last.SetValue('1')
-        self.input_attack_cd.SetValue('1')
-        self.input_element_cd.SetValue('0')
+        self.input_time_start.SetValue('2')
+        self.input_time_last.SetValue('12')
+        self.input_attack_cd.SetValue('2')
+        self.input_element_cd.SetValue('2')
 
         self.setting_id = num
         self.is_active = False
@@ -51,13 +52,15 @@ class AttackSetting:
         self.attack_cd = 1
         self.element_cd = 2.5
 
+        self.current_attack_cd = 0
+        self.current_element_cd = 0
         pass
 
     def get_inputs(self):
         try:
             self.is_active = self.input_is_active.GetValue()
             self.name = self.input_name.GetValue()
-            self.element = self.input_element.GetString(self.input_attack_mode.GetSelection())
+            self.element = self.input_element.GetString(self.input_element.GetSelection())
             self.attack_mode = self.input_attack_mode.GetString(self.input_attack_mode.GetSelection())
             self.element_mass = float(self.input_element_mass.GetValue())
             self.time_start = float(self.input_time_start.GetValue())
@@ -86,6 +89,33 @@ class AttackSetting:
 
     def remove(self):
         pass
+
+    def time_advance(self, dt):
+        # 冷却减少
+        if self.current_attack_cd > 0:
+            self.current_attack_cd -= dt
+            self.current_attack_cd = max(self.current_attack_cd, 0)
+        if self.current_element_cd > 0:
+            self.current_element_cd -= dt
+            self.current_element_cd = max(self.current_element_cd, 0)
+        pass
+
+    def generate_attack(self, time):
+        if not self.is_active:
+            return None
+        if self.current_attack_cd > 0.001:
+            return None
+        if time < self.time_start - 0.001 or time > self.time_start + self.time_last + 0.001:
+            return None
+
+        self.current_attack_cd = self.attack_cd
+        if self.current_element_cd < 0.001:
+            self.current_element_cd = self.element_cd
+            return Attack(self.name, self.element, self.element_mass)
+        else:
+            return Attack(self.name, self.element, element_mass=0)
+
+    pass
 
 
 class BasicSetting:

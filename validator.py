@@ -4,7 +4,7 @@ import wx
 class NumberValidator(wx.Validator):
     def __init__(self):
         wx.Validator.__init__(self)
-        self.valid_input = ['.', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+        self.valid_input = ['.', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
         # self.string_length = 0
         self.Bind(wx.EVT_CHAR, self.on_char_changed)
         pass

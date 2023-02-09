@@ -8,6 +8,29 @@ import monitor
 import target
 import setting
 from const import APP_TITLE, SETTING_TITLE
+from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+from matplotlib.backends.backend_wx import NavigationToolbar2Wx
+from matplotlib.figure import Figure
+from numpy import arange, sin, pi
+import matplotlib
+matplotlib.use('WXAgg')
+
+
+class CanvasPanel(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+        self.figure = Figure(figsize=(4, 3))
+        self.axes = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self, -1, self.figure)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        self.SetSizer(self.sizer)
+        self.Fit()
+
+    # def draw(self):
+    #     t = arange(0.0, 3.0, 0.01)
+    #     s = sin(2 * pi * t)
+    #     self.axes.plot(t, s)
 
 
 class MainFrame(wx.Frame):
@@ -56,10 +79,13 @@ class MainFrame(wx.Frame):
         self.attack_setting = []
         self.add_setting()
 
+        self.canvas = CanvasPanel(self.panel)
+        # self.canvas.draw()
         # apply BoxSizer
         self.bs = wx.BoxSizer(wx.VERTICAL)
         self.bs.Add(self.bs_action, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-        self.bs.Add(self.bs_setting, proportion=9, flag=wx.EXPAND | wx.ALL, border=5)
+        self.bs.Add(self.bs_setting, proportion=5, flag=wx.EXPAND | wx.ALL, border=5)
+        self.bs.Add(self.canvas, proportion=4, flag=wx.EXPAND | wx.ALL, border=5)
         self.panel.SetSizer(self.bs)
 
     def add_setting(self):
@@ -101,7 +127,8 @@ class MainFrame(wx.Frame):
 
     def on_add_setting(self, event):
         self.add_setting()
-        self.bs_setting.Layout()
+        # self.bs_setting.Layout()
+        self.bs.Layout()
 
     def start_simulation(self, event):
         self.basic_setting.target_num = 1
@@ -115,8 +142,10 @@ class MainFrame(wx.Frame):
             if not self.attack_setting[i].get_inputs():
                 print('attack setting %d error' % (i+1))
                 return False
-        # m = monitor.Monitor(max_time=self.max_time, target_num=1, attack_num=self.setting_num)
 
+        m = monitor.Monitor(self.basic_setting)
+        m.simulate(self.attack_setting)
+        m.plot(self.canvas)
 
 class MainApp(wx.App):
 
