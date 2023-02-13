@@ -2,6 +2,7 @@ import wx
 from validator import NumberValidator
 from const import ELEMENTS, BASIC_ELEMENT_DICT
 from attack import Attack
+import random as rand
 
 
 class AttackSetting:
@@ -36,10 +37,10 @@ class AttackSetting:
         self.input_element.SetSelection(0)
         self.input_element_mass.SetValue('1')
         self.input_attack_mode.SetSelection(0)
-        self.input_time_start.SetValue('2')
-        self.input_time_last.SetValue('12')
-        self.input_attack_cd.SetValue('2')
-        self.input_element_cd.SetValue('2')
+        self.input_time_start.SetValue(str(rand.randint(0, 30)/10))
+        self.input_time_last.SetValue('15')
+        self.input_attack_cd.SetValue(str(rand.randint(10, 20)/10))
+        self.input_element_cd.SetValue('0')
 
         self.setting_id = num
         self.is_active = False
@@ -82,6 +83,9 @@ class AttackSetting:
             self.error_log('攻击频率过快')
             return False
 
+        # restart simulation reset cd
+        self.current_attack_cd = 0
+        self.current_element_cd = 0
         return True
 
     def error_log(self, info):
@@ -124,13 +128,15 @@ class BasicSetting:
         self.bs = wx.BoxSizer()
         self.bs.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="模拟时长(s)："),
                     flag=wx.EXPAND | wx.ALL, border=5)
-        self.input_max_time = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 24))
+        self.input_max_time = wx.TextCtrl(parent, validator=NumberValidator(), size=(30, 24))
         self.input_max_time.SetValue('20')
         self.bs.Add(self.input_max_time, flag=wx.EXPAND | wx.ALL, border=5)
-
+        self.input_log_apply = wx.CheckBox(parent, label='记录附着')
+        self.bs.Add(self.input_log_apply)
         self.max_time = 0
         self.target_num = 1
         self.attack_num = 1
+        self.log_apply = True
 
     def get_inputs(self):
         try:
@@ -142,4 +148,6 @@ class BasicSetting:
             print('max time too long')
             return False
         self.max_time = max_time
+
+        self.log_apply = self.input_log_apply.GetValue()
         return True

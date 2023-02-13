@@ -39,7 +39,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self, None, -1, title=APP_TITLE)
 
         self.SetBackgroundColour(wx.Colour(224, 224, 224))
-        self.SetSize((1000, 600))
+        self.SetSize((1200, 600))
         self.Center()
         self.make_menu_bar()
         self.CreateStatusBar()
@@ -86,7 +86,12 @@ class MainFrame(wx.Frame):
         self.bs.Add(self.bs_action, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
         self.bs.Add(self.bs_setting, proportion=5, flag=wx.EXPAND | wx.ALL, border=5)
         self.bs.Add(self.canvas, proportion=4, flag=wx.EXPAND | wx.ALL, border=5)
-        self.panel.SetSizer(self.bs)
+
+        self.bs_main = wx.BoxSizer()
+        self.bs_main.Add(self.bs, proportion=6, flag=wx.EXPAND | wx.ALL, border=5)
+        self.log_place = wx.StaticText(self.panel, label='----等待模拟----')
+        self.bs_main.Add(self.log_place, proportion=4, flag=wx.EXPAND | wx.ALL, border=5)
+        self.panel.SetSizer(self.bs_main)
 
     def add_setting(self):
         self.setting_num += 1
@@ -143,10 +148,10 @@ class MainFrame(wx.Frame):
                 print('attack setting %d error' % (i+1))
                 return False
 
-        m = monitor.Monitor(self.basic_setting)
+        m = monitor.Monitor(self.basic_setting, self.log_place)
         m.simulate(self.attack_setting)
         m.plot(self.canvas)
-
+        self.bs_main.Layout()
 class MainApp(wx.App):
 
     def OnInit(self):
