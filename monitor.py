@@ -40,7 +40,7 @@ class Monitor:
 
             # element decrease
             for t in range(self.target_num):
-                self.target_list[t].time_advance(dt)
+                self.target_list[t].time_advance(dt, self.time)
 
             # cd decrease
             for a in range(self.attack_num):
@@ -74,7 +74,12 @@ class Monitor:
                 self.log_action("%s在%s发生蒸发，" % (atk.name, tgt.name))
                 tgt.element[1] = max(0, tgt.element[1] - 2 * atk.element_mass)
                 tgt.log_element_change()
-
+            if tgt.element[2] > 0:  # 目标有冰元素附着，冻结
+                self.log_action("%s对%s造成冻结，" % (atk.name, tgt.name))
+                quant = min(tgt.element[2], atk.element_mass)  # 反应量是两元素中较少的
+                tgt.element[2] = max(0, tgt.element[2] - quant)
+                tgt.element[5] = max(tgt.element[5], 2*quant)
+                tgt.log_element_change()
             elif tgt.element[0] > 0:  # 目标有水附着
                 if atk.element_mass * 0.8 > tgt.element[0]:
                     tgt.element[0] = atk.element_mass * 0.8
@@ -88,7 +93,13 @@ class Monitor:
 
             pass
         elif atk.element == '火':  # 火
-            if tgt.element[0] > 0:  # 目标有水附着
+            if tgt.element[2] > 0 or tgt.element[5] > 0:  # 目标有冰或冻附着，融化
+                self.log_action("%s在%s发生融化" % (atk.name, tgt.name))
+                tgt.element[2] = max(0, tgt.element[2] - atk.element_mass * 2)
+                tgt.element[5] = max(0, tgt.element[5] - atk.element_mass * 2)
+                tgt.log_element_change()
+
+            elif tgt.element[0] > 0:  # 目标有水附着
                 self.log_action("%s在%s发生蒸发，" % (atk.name, tgt.name))
                 tgt.element[0] = max(0, tgt.element[0] - atk.element_mass / 2)
                 tgt.log_element_change()
@@ -96,6 +107,7 @@ class Monitor:
             elif tgt.element[1] > 0:  # 目标有火附着
                 if atk.element_mass * 0.8 > tgt.element[1]:
                     tgt.element[1] = atk.element_mass * 0.8
+                    tgt.decrease_spd[1] = decrease_speed(atk.element, atk.element_mass)  # 3.0后衰减速度也覆盖
                     self.log_action("%s刷新%s的火元素量，" % (atk.name, tgt.name))
                     tgt.log_element_change()
             else:  # 目标无附着，造成火元素附着，计算衰减速度
@@ -111,7 +123,32 @@ class Monitor:
             pass
         elif atk.element == 5:  # 草
             pass
-        elif atk.element == 6:  # 冰
+        elif atk.element == '冰':  # 冰
+            if tgt.element[3] > 0:  # 目标有雷附着，超导
+                pass
+            elif tgt.element[1] > 0:  # 目标有火附着，融化
+                self.log_action("%s在%s发生融化，" % (atk.name, tgt.name))
+                tgt.element[1] = max(0, tgt.element[1] - atk.element_mass / 2)
+                tgt.log_element_change()
+
+            elif tgt.element[0] > 0:  # 目标有水附着，冻结
+                self.log_action("%s对%s造成冻结，" % (atk.name, tgt.name))
+                quant = min(tgt.element[0], atk.element_mass)  # 反应量是两元素中较少的
+                tgt.element[0] = max(0, tgt.element[0] - quant)
+                tgt.element[5] = max(tgt.element[5], 2*quant)
+                tgt.log_element_change()
+
+            elif tgt.element[2] > 0:  # 目标有冰附着，判断是否覆盖
+                if atk.element_mass * 0.8 > tgt.element[2]:
+                    tgt.element[2] = atk.element_mass * 0.8
+                    self.log_action("%s刷新%s的冰元素量，" % (atk.name, tgt.name))
+                    tgt.log_element_change()
+            else:  # 目标无附着，造成火元素附着，计算衰减速度
+                tgt.element[2] = atk.element_mass * 0.8
+                tgt.decrease_spd[2] = decrease_speed(atk.element, atk.element_mass)
+                self.log_action("%s对%s造成冰元素附着，" % (atk.name, tgt.name))
+                tgt.log_element_change()
             pass
         elif atk.element == 7:  # 岩
             pass
+
