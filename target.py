@@ -13,9 +13,10 @@ class Target:
         self.element_string = "无元素附着"
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
-        #self.is_electro_charged = False  # 感电
+        # self.is_electro_charged = False  # 感电
         self.electro_charged_source = 'None'  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
+        self.geo_cd = 0  # 结晶CD
 
     def time_advance(self, dt, time, log):
         # 冻结判断
@@ -36,6 +37,9 @@ class Target:
         if self.electro_charged_cd > 0:
             self.electro_charged_cd = max(0, self.electro_charged_cd - dt)
 
+        # 结晶CD
+        if self.geo_cd > 0:
+            self.geo_cd = max(0, self.geo_cd - dt)
 
         # 元素减少
         for i in range(8):

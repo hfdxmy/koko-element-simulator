@@ -19,7 +19,7 @@ matplotlib.use('WXAgg')
 class CanvasPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        self.figure = Figure(figsize=(4, 3))
+        self.figure = Figure(figsize=(4, 4))
         self.axes = self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self, -1, self.figure)
         self.sizer = wx.BoxSizer(wx.VERTICAL)

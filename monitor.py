@@ -68,6 +68,11 @@ class Monitor:
     def process_attack(self):
         while len(self.attack_list) > 0:
             atk = self.attack_list.pop(0)
+            # 岩击碎冰
+            if atk.element == '岩' and self.target_list[0].element[5] > 0:
+                self.target_list[0].element[5] = 0
+                self.log_action("%s使得%s碎冰，%s" % (atk.name, self.target_list[0].name, self.target_list[0].log_element_change()))
+
             if atk.element_mass > 0:
                 # 如果带元素
                 self.reaction(self.target_list[0], atk)
@@ -195,8 +200,25 @@ class Monitor:
                 tgt.decrease_spd[2] = decrease_speed(atk.element, atk.element_mass)
                 self.log_apply("%s对%s造成冰元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
             pass
-        elif atk.element == 7:  # 岩
-            pass
+        elif atk.element == '岩':  # 岩
+            if tgt.geo_cd > 0:
+                return
+            if tgt.element[3] > 0:  # 结晶
+                tgt.element[3] = max(0, tgt.element[3] - atk.element_mass / 2)
+                self.log_action("%s在%s触发雷结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            elif tgt.element[1] > 0:
+                tgt.element[1] = max(0, tgt.element[1] - atk.element_mass / 2)
+                self.log_action("%s在%s触发火结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            elif tgt.element[0] > 0:
+                tgt.element[0] = max(0, tgt.element[0] - atk.element_mass / 2)
+                self.log_action("%s在%s触发水结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            elif tgt.element[2] > 0:
+                tgt.element[2] = max(0, tgt.element[2] - atk.element_mass / 2)
+                self.log_action("%s在%s触发冰结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            elif tgt.element[5] > 0:
+                tgt.element[5] = max(0, tgt.element[5] - atk.element_mass / 2)
+                self.log_action("%s在%s触发冻结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            tgt.geo_cd = 1
 
     def reaction_froze(self, tgt, atk):
         tgt_elem_id = 2  # 冰
