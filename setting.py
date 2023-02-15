@@ -133,10 +133,13 @@ class BasicSetting:
         self.bs.Add(self.input_max_time, flag=wx.EXPAND | wx.ALL, border=5)
         self.input_log_apply = wx.CheckBox(parent, label='记录附着')
         self.bs.Add(self.input_log_apply)
+        self.input_log_quicken = wx.CheckBox(parent, label='记录激化')
+        self.bs.Add(self.input_log_quicken)
         self.max_time = 0
         self.target_num = 1
         self.attack_num = 1
         self.log_apply = True
+        self.log_quicken = True
 
     def get_inputs(self):
         try:
@@ -150,4 +153,5 @@ class BasicSetting:
         self.max_time = max_time
 
         self.log_apply = self.input_log_apply.GetValue()
+        self.log_quicken = self.input_log_quicken.GetValue()
         return True

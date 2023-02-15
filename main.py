@@ -34,12 +34,11 @@ class CanvasPanel(wx.Panel):
 
 
 class MainFrame(wx.Frame):
-
     def __init__(self):
         wx.Frame.__init__(self, None, -1, title=APP_TITLE)
 
         self.SetBackgroundColour(wx.Colour(224, 224, 224))
-        self.SetSize((1200, 600))
+        self.SetSize((1300, 800))
         self.Center()
         self.make_menu_bar()
         self.CreateStatusBar()
@@ -91,6 +90,7 @@ class MainFrame(wx.Frame):
         self.bs_main.Add(self.bs, proportion=6, flag=wx.EXPAND | wx.ALL, border=5)
         self.log_place = wx.StaticText(self.panel, label='----等待模拟----')
         self.bs_main.Add(self.log_place, proportion=4, flag=wx.EXPAND | wx.ALL, border=5)
+        # MainFrame.log_place = self.log_place
         self.panel.SetSizer(self.bs_main)
 
     def add_setting(self):
@@ -152,6 +152,8 @@ class MainFrame(wx.Frame):
         m.simulate(self.attack_setting)
         m.plot(self.canvas)
         self.bs_main.Layout()
+
+
 class MainApp(wx.App):
 
     def OnInit(self):
@@ -162,6 +164,6 @@ class MainApp(wx.App):
 
 
 if __name__ == '__main__':
-    # app = mainApp(redirect=True, filename="debug.txt")
     app = MainApp()
     app.MainLoop()
+

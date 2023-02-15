@@ -1,18 +1,22 @@
 import attack
+import dendro_core
 import target
 import numpy as np
-
+import dendro_core as dc
 dt = 0.02
 
 
 def decrease_speed(element, element_mass):
     spd = 0
-    if element == '水' or element == '火' or element == '雷' or element == '冰':  # 水，火，雷，冰附着
+    if element == '水' or element == '火' or element == '雷' or element == '冰' or element == '草':  # 水，火，雷，冰，草附着
         spd = 0.8 * element_mass / (element_mass * 2.5 + 7)
+    if element == '激':
+        spd = element_mass / (5 * element_mass + 6)
     return spd
 
 
 class Monitor:
+
     def __init__(self, bs, log_place):  # bs short for basic setting
         self.time = 0
         self.max_time = bs.max_time
@@ -21,9 +25,12 @@ class Monitor:
 
         self.steps = int(bs.max_time / dt)
         self.attack_list: list[attack.Attack] = []
-        self.target_list = [target.Target() for _ in range(bs.target_num)]
+        self.target_list = [target.Target(self) for _ in range(bs.target_num)]
         self.flag_log_apply = bs.log_apply
+        self.flag_log_quicken = bs.log_quicken
         self.log_place = log_place
+        self.dcm = dendro_core.DCManager(self)
+        
         pass
 
     def simulate(self, atk_set):
@@ -36,9 +43,6 @@ class Monitor:
                     self.attack_list.append(atk)
                     self.process_attack()
 
-            #  dendro-core check
-            #  electro-hydro check
-
             # element decrease
             for t in range(self.target_num):
                 self.target_list[t].time_advance(dt, self.time, self.log_action)
@@ -46,6 +50,10 @@ class Monitor:
             # cd decrease
             for a in range(self.attack_num):
                 atk_set[a].time_advance(dt)
+
+            # dendro-core life
+            self.dcm.time_advance(dt)
+
             # time advance
             self.time += dt
         self.log_basic('---模拟结束---')
@@ -65,19 +73,29 @@ class Monitor:
         if self.flag_log_apply:
             self.log_action(info)
 
+    def log_quicken(self, info):
+        if self.flag_log_quicken:
+            self.log_action(info)
+
     def process_attack(self):
         while len(self.attack_list) > 0:
             atk = self.attack_list.pop(0)
+
+            # 对atk的每个tgt id判断一次
+            tgt = self.target_list[0]
             # 岩击碎冰
-            if atk.element == '岩' and self.target_list[0].element[5] > 0:
-                self.target_list[0].element[5] = 0
-                self.log_action("%s使得%s碎冰，%s" % (atk.name, self.target_list[0].name, self.target_list[0].log_element_change()))
+            if atk.element == '岩' and tgt.element[5] > 0:
+                tgt.element[5] = 0
+                self.log_action("%s使得%s碎冰，%s" % (atk.name, tgt.name, self.target_list[0].log_element_change()))
 
             if atk.element_mass > 0:
                 # 如果带元素
-                self.reaction(self.target_list[0], atk)
-            else:
-                # 如果不带元素，只检查协同触发和草核
+                self.reaction(tgt, atk)
+            elif atk.element_mass > -1:
+                # 超烈绽放
+                if atk.element == '火' or atk.element == '雷':
+                    self.dcm.core_reaction(self.target_list[0], atk)
+                # 如果不带元素，只检查协同触发
                 pass
         pass
 
@@ -87,7 +105,13 @@ class Monitor:
                 tgt.element[1] = max(0, tgt.element[1] - 2 * atk.element_mass)
                 self.log_action("%s在%s发生蒸发，%s" % (atk.name, tgt.name, tgt.log_element_change()))
             elif tgt.element[2] > 0:  # 目标有冰元素附着，冻结
-                self.reaction_froze(tgt,atk)
+                self.reaction_froze(tgt, atk)
+            elif tgt.element[4] > 0:
+                tgt.element[4] = max(0, tgt.element[4] - atk.element_mass / 2)
+                tgt.element[6] = max(0, tgt.element[6] - atk.element_mass / 2)
+                self.log_action("%s在%s触发绽放，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+                self.dcm.new_dc(atk.name, tgt)
+
             elif tgt.element[0] > 0:  # 目标有水附着
                 if atk.element_mass * 0.8 > tgt.element[0]:
                     tgt.element[0] = atk.element_mass * 0.8
@@ -109,7 +133,7 @@ class Monitor:
                 else:
                     tgt.element[3] -= atk.element_mass
 
-                self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=0, target=[0]))
+                self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=-1, target=[0]))
                 self.log_action("%s在%s触发超载，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
                 if extra_element > 0 and tgt.element[0] > 0:  # 过量火继续蒸发
@@ -138,9 +162,13 @@ class Monitor:
         elif atk.element == 3:  # 风
             pass
         elif atk.element == '雷':  # 雷
-            if tgt.element[1] > 0:  # 目标有火附着，超载
+            if tgt.element[6] > 0:  # 超激化
+                self.log_quicken("%s在%s触发超激化" % (atk.name, tgt.name))
+            if tgt.element[4] > 0:  # 原激化
+                self.reaction_quicken(tgt, atk)
+            elif tgt.element[1] > 0:  # 目标有火附着，超载
                 tgt.element[1] = max(0, tgt.element[1] - atk.element_mass)
-                self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=0, target=[0]))
+                self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=-1, target=[0]))
                 self.log_action("%s在%s触发超载，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
             elif tgt.element[2] > 0 or tgt.element[5] > 0:  # 目标有冰附着或冻附着，超导，先消耗藏冰
@@ -153,7 +181,7 @@ class Monitor:
                 else:
                     tgt.element[2] = max(0, tgt.element[2] - atk.element_mass)
 
-                self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=0, target=[0]))
+                self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=-1, target=[0]))
                 self.log_action("%s在%s触发超导，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
             elif tgt.element[3] > 0:  # 目标有雷附着
@@ -168,8 +196,27 @@ class Monitor:
                 self.log_apply("%s对%s造成雷元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 tgt.electro_charge(self.log_action)
             pass
-        elif atk.element == 5:  # 草
-            pass
+        elif atk.element == '草':  # 草
+            if tgt.element[6] > 0:  # 蔓激化
+                self.log_quicken("%s在%s触发蔓激化" % (atk.name, tgt.name))
+            if tgt.element[3] > 0:  # 原激化
+                self.reaction_quicken(tgt, atk)
+            elif tgt.element[1] > 0:  # 燃烧
+                pass
+            elif tgt.element[0] > 0:  # 绽放
+                tgt.element[0] = max(0, tgt.element[0] - 2*atk.element_mass)
+                self.log_action("%s在%s触发绽放，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+                self.dcm.new_dc(atk.name, tgt)
+
+            elif tgt.element[4] > 0:  # 刷新草量
+                if atk.element_mass * 0.8 > tgt.element[4]:
+                    tgt.element[4] = atk.element_mass * 0.8
+                    self.log_apply("%s刷新%s的草元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            else:  # 草附着
+                tgt.element[4] = atk.element_mass * 0.8
+                tgt.decrease_spd[4] = decrease_speed(atk.element, atk.element_mass)
+                self.log_apply("%s对%s造成草元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
         elif atk.element == '冰':  # 冰
             if tgt.element[3] > 0:  # 目标有雷附着，超导
                 extra_element = 0
@@ -179,7 +226,7 @@ class Monitor:
                 else:
                     tgt.element[3] -= atk.element_mass
 
-                self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=0, target=[0]))
+                self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=-1, target=[0]))
                 self.log_action("%s在%s触发超导，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
                 if extra_element > 0 and tgt.element[0] > 0:  # 过量冰继续冻结
@@ -190,7 +237,7 @@ class Monitor:
                 tgt.element[1] = max(0, tgt.element[1] - atk.element_mass / 2)
                 self.log_action("%s在%s发生融化，%s" % (atk.name, tgt.name, tgt.log_element_change()))
             elif tgt.element[0] > 0:  # 目标有水附着，冻结
-                self.reaction_froze(tgt,atk)
+                self.reaction_froze(tgt, atk)
             elif tgt.element[2] > 0:  # 目标有冰附着，判断是否覆盖
                 if atk.element_mass * 0.8 > tgt.element[2]:
                     tgt.element[2] = atk.element_mass * 0.8
@@ -228,3 +275,14 @@ class Monitor:
         tgt.element[tgt_elem_id] = max(0, tgt.element[tgt_elem_id] - quant)
         tgt.element[5] = max(tgt.element[5], 2 * quant)
         self.log_action("%s对%s造成冻结，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+    def reaction_quicken(self, tgt, atk):
+        tgt_elem_id = 3  # 雷
+        if atk.element == '雷':
+            tgt_elem_id = 4  # 草
+        quant = min(tgt.element[tgt_elem_id], atk.element_mass)
+        tgt.element[tgt_elem_id] = max(0, tgt.element[tgt_elem_id] - quant)
+        if quant > tgt.element[6]: # 覆盖，速度一同覆盖
+            tgt.element[6] = quant
+            tgt.decrease_spd[6] = decrease_speed('激', quant)
+        self.log_action("%s在%s触发原激化，%s" % (atk.name, tgt.name, tgt.log_element_change()))
