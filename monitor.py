@@ -29,7 +29,9 @@ class Monitor:
         self.flag_log_apply = bs.log_apply
         self.flag_log_quicken = bs.log_quicken
         self.log_place = log_place
+        self.nilou = bs.nilou
         self.dcm = dendro_core.DCManager(self)
+
         
         pass
 

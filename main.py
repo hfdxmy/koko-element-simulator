@@ -46,6 +46,8 @@ class MainFrame(wx.Frame):
 
         self.panel = wx.Panel(self)
 
+        self.log_place = wx.StaticText(self.panel, label='----等待模拟----')
+
         self.runButton = wx.Button(self.panel, label="模拟")
         self.runButton.Bind(wx.EVT_BUTTON, self.start_simulation)
         self.addButton = wx.Button(self.panel, label="添加")
@@ -62,7 +64,7 @@ class MainFrame(wx.Frame):
         # init setting area
         self.bs_setting = wx.BoxSizer(wx.VERTICAL)
         # .1 init basic setting
-        self.basic_setting = setting.BasicSetting(self.panel)
+        self.basic_setting = setting.BasicSetting(self.panel, self.log_place)
         self.bs_setting.Add(self.basic_setting.bs, border=5)
 
         # .2 init setting title
@@ -88,14 +90,12 @@ class MainFrame(wx.Frame):
 
         self.bs_main = wx.BoxSizer()
         self.bs_main.Add(self.bs, proportion=6, flag=wx.EXPAND | wx.ALL, border=5)
-        self.log_place = wx.StaticText(self.panel, label='----等待模拟----')
         self.bs_main.Add(self.log_place, proportion=4, flag=wx.EXPAND | wx.ALL, border=5)
-        # MainFrame.log_place = self.log_place
         self.panel.SetSizer(self.bs_main)
 
     def add_setting(self):
         self.setting_num += 1
-        new_as = setting.AttackSetting(self.panel, self.setting_num)
+        new_as = setting.AttackSetting(self.panel, self.setting_num, self.log_place)
         self.attack_setting.append(new_as)
         self.bs_setting.Add(new_as.bs, flag=wx.EXPAND | wx.ALL, border=5)
         pass
@@ -140,12 +140,12 @@ class MainFrame(wx.Frame):
         self.basic_setting.attack_num = self.setting_num
 
         if not self.basic_setting.get_inputs():
-            print('basic setting param error')
+            self.log_place.SetLabel('basic setting param error')
             return False
 
         for i in range(self.setting_num):
             if not self.attack_setting[i].get_inputs():
-                print('attack setting %d error' % (i+1))
+                self.log_place.SetLabel('attack setting %d error' % (i+1))
                 return False
 
         m = monitor.Monitor(self.basic_setting, self.log_place)

@@ -7,7 +7,8 @@ import random as rand
 
 class AttackSetting:
 
-    def __init__(self, parent, num):
+    def __init__(self, parent, num, log_place):
+        self.log_place = log_place
         self.bs = wx.BoxSizer()
         self.input_is_active = wx.CheckBox(parent, label='启用')  # 启用
         self.input_name = wx.TextCtrl(parent, size=(40, 20))  # 名称
@@ -89,7 +90,7 @@ class AttackSetting:
         return True
 
     def error_log(self, info):
-        print('第%d条设置：“%s” %s' % (self.setting_id, self.name, info))
+        self.log_place.SetLabel('第%d条设置：“%s” %s' % (self.setting_id, self.name, info))
 
     def remove(self):
         pass
@@ -124,7 +125,7 @@ class AttackSetting:
 
 class BasicSetting:
 
-    def __init__(self, parent):
+    def __init__(self, parent, log_place):
         self.bs = wx.BoxSizer()
         self.bs.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="模拟时长(s)："),
                     flag=wx.EXPAND | wx.ALL, border=5)
@@ -135,23 +136,28 @@ class BasicSetting:
         self.bs.Add(self.input_log_apply)
         self.input_log_quicken = wx.CheckBox(parent, label='记录激化')
         self.bs.Add(self.input_log_quicken)
+        self.input_nilou = wx.CheckBox(parent, label='妮绽放')
+        self.bs.Add(self.input_nilou)
         self.max_time = 0
         self.target_num = 1
         self.attack_num = 1
+        self.log_place = log_place
         self.log_apply = True
         self.log_quicken = True
+        self.nilou = False
 
     def get_inputs(self):
         try:
             max_time = float(self.input_max_time.GetValue())
         except ValueError:
-            print('max time error')
+            self.log_place.SetLabel('max time error')
             return False
         if max_time > 40:
-            print('max time too long')
+            self.log_place.SetLabel('max time too long')
             return False
         self.max_time = max_time
 
         self.log_apply = self.input_log_apply.GetValue()
         self.log_quicken = self.input_log_quicken.GetValue()
+        self.nilou = self.input_nilou.GetValue()
         return True

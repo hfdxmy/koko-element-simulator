@@ -3,9 +3,9 @@ import attack
 
 class DendroCore:
     
-    def __init__(self, count, source, tgt):
-        self.name = '草核' + str(count)
-        self.life = 6
+    def __init__(self, count, source, tgt, dcm):
+        self.name = dcm.dc_prefix + str(count)
+        self.life = dcm.dc_life
         self.parent = tgt
         self.source = source
 
@@ -16,6 +16,11 @@ class DCManager:
         self.dc_count = 0
         self.dc_list: list[DendroCore] = []
         self.monitor = monitor
+        self.dc_life = 6.0
+        self.dc_prefix = '草原核'
+        if monitor.nilou:
+            self.dc_life = 0.85
+            self.dc_prefix = '丰穰之核'
 
     def clear(self):
         self.dc_count = 0
@@ -23,7 +28,7 @@ class DCManager:
 
     def new_dc(self, source, tgt):
         self.dc_count += 1
-        self.dc_list.append(DendroCore(self.dc_count, source, tgt))
+        self.dc_list.append(DendroCore(self.dc_count, source, tgt, dcm=self))
         if len(self.dc_list) > 5:
             self.core_bloom(0, 0)
 
@@ -44,6 +49,8 @@ class DCManager:
 
     def core_reaction(self, tgt, atk):
         if len(self.dc_list) == 0:
+            return
+        if self.monitor.nilou:
             return
         for i in range(len(self.dc_list)).__reversed__():
             if self.dc_list[i].parent == tgt:
