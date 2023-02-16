@@ -91,7 +91,7 @@ class Monitor:
             if atk.element_mass > 0:
                 # 如果带元素
                 self.reaction(tgt, atk)
-            elif atk.element_mass > -1:
+            if atk.element_mass > -1:
                 # 超烈绽放
                 if atk.element == '火' or atk.element == '雷':
                     self.dcm.core_reaction(self.target_list[0], atk)
@@ -112,21 +112,11 @@ class Monitor:
 
             elif tgt.element[4] > 0 or tgt.element[6] > 0:
                 self.reaction_bloom(tgt, atk)
-
-            elif tgt.element[3] > 0 and tgt.element[6] > 0:  # 激雷+水
-                extra_ec = False
-                if atk.element_mass > tgt.element[6] * 2:  # 水过量，强制触发一次感电，不进行附着
-                    tgt.element[6] = 0
-                    extra_ec = True
-                else:
-                    tgt.element[6] -= atk.element_mass / 2
-                self.log_action("%s在%s触发绽放，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-                self.dcm.new_dc(atk.name, tgt)
-
-                if extra_ec and tgt.electro_charged_cd == 0:
-                    self.log_action("%s感电，由%s触发" % (tgt.name, atk.name))
-                    self.attack_list.append(attack.Attack('感电', '雷', -1))
-                    tgt.electro_charged_cd = 1
+                if atk.element_mass > 0.01 and tgt.element[3] > 0:  # 水过量，强制触发一次感电，不进行附着
+                    if tgt.electro_charged_cd == 0:
+                        self.log_action("%s感电，由%s触发" % (tgt.name, atk.name))
+                        self.attack_list.append(attack.Attack('感电', '雷', -1))
+                        tgt.electro_charged_cd = 1
 
             elif tgt.element[0] > 0:  # 目标有水附着
                 if atk.element_mass * 0.8 > tgt.element[0]:
@@ -233,9 +223,7 @@ class Monitor:
             elif tgt.element[1] > 0:  # 燃烧
                 pass
             elif tgt.element[0] > 0:  # 绽放
-                tgt.element[0] = max(0, tgt.element[0] - 2*atk.element_mass)
-                self.log_action("%s在%s触发绽放，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-                self.dcm.new_dc(atk.name, tgt)
+                self.reaction_bloom(tgt, atk)
 
             elif tgt.element[4] > 0:  # 刷新草量
                 if atk.element_mass * 0.8 > tgt.element[4]:

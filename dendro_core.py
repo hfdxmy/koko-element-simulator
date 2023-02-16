@@ -57,7 +57,7 @@ class DCManager:
     def core_bloom(self, core_id, method, trigger='None'):
         core = self.dc_list.pop(core_id)
         if method == 0:  # 普通绽放
-            self.monitor.log_action("%s由%s产生的草核原绽放" % (core.name, core.source))
+            self.monitor.log_action("由%s产生的%s原绽放" % (core.source, core.name))
         elif method == 1:  # 超绽放
             self.monitor.log_action("%s超绽放，由%s触发，目标为%s" % (core.name, trigger, core.parent.name))
         elif method == 2:  # 烈绽放
