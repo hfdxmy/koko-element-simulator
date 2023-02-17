@@ -14,7 +14,7 @@ class AttackSetting:
         self.input_name = wx.TextCtrl(parent, size=(40, 20))  # 名称
         self.input_element = wx.Choice(parent, choices=ELEMENTS)  # 元素
         self.input_element_mass = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 20))  # 元素量
-        self.input_attack_mode = wx.Choice(parent, choices=['定时触发', '其他'])  # 攻击方式
+        self.input_attack_mode = wx.Choice(parent, choices=['定时触发', '草神协同'])  # 攻击方式
         self.input_time_start = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 20))  # 起始时间
         self.input_time_last = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 20))  # 持续时间
         self.input_attack_cd = wx.TextCtrl(parent, validator=NumberValidator(), size=(40, 20))  # 攻击冷却
@@ -108,9 +108,9 @@ class AttackSetting:
     def generate_attack(self, time):
         if not self.is_active:
             return None
-        if self.current_attack_cd > 0.001:
-            return None
         if time < self.time_start - 0.001 or time > self.time_start + self.time_last + 0.001:
+            return None
+        if self.current_attack_cd > 0.001:
             return None
 
         self.current_attack_cd = self.attack_cd

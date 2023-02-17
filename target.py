@@ -3,7 +3,6 @@ from const import ATTACH_ELEMENT_DICT
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class Target:
 
     def __init__(self, monitor):
@@ -19,6 +18,13 @@ class Target:
         self.electro_charged_source = 'None'  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
         self.geo_cd = 0  # 结晶CD
+        self.coordinate = []  # 协同
+
+    def coordinate_attack(self):
+        for i in self.coordinate:
+            atk = self.monitor.atk_set[i].generate_attack(self.monitor.time)
+            if atk is not None:
+                self.monitor.attack_list.append(atk)
 
     def time_advance(self, dt, time):
         # 冻结判断
@@ -75,6 +81,7 @@ class Target:
         self.element[3] = max(0, self.element[3] - 0.4)
         self.monitor.log_action("%s感电，由%s触发，%s" % (self.name, self.electro_charged_source, self.log_element_change()))
         self.monitor.attack_list.append(attack.Attack('感电', '雷', -1))
+        self.coordinate_attack()
 
     def log_element_change(self):
         # print("%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string()))

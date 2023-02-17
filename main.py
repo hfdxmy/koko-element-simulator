@@ -148,8 +148,8 @@ class MainFrame(wx.Frame):
                 self.log_place.SetLabel('attack setting %d error' % (i+1))
                 return False
 
-        m = monitor.Monitor(self.basic_setting, self.log_place)
-        m.simulate(self.attack_setting)
+        m = monitor.Monitor(self.basic_setting, self.attack_setting, self.log_place)
+        m.simulate()
         m.plot(self.canvas)
         self.bs_main.Layout()
 
