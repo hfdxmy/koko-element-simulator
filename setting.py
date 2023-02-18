@@ -138,6 +138,8 @@ class BasicSetting:
         self.bs.Add(self.input_log_quicken)
         self.input_nilou = wx.CheckBox(parent, label='妮绽放')
         self.bs.Add(self.input_nilou)
+        self.input_flag_froze = wx.CheckBox(parent, label='不可冻结')
+        self.bs.Add(self.input_flag_froze)
         self.max_time = 0
         self.target_num = 1
         self.attack_num = 1
@@ -145,6 +147,7 @@ class BasicSetting:
         self.log_apply = True
         self.log_quicken = True
         self.nilou = False
+        self.flag_froze = True
 
     def get_inputs(self):
         try:
@@ -160,4 +163,5 @@ class BasicSetting:
         self.log_apply = self.input_log_apply.GetValue()
         self.log_quicken = self.input_log_quicken.GetValue()
         self.nilou = self.input_nilou.GetValue()
+        self.flag_froze = not (self.input_flag_froze.GetValue())
         return True

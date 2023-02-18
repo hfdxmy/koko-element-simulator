@@ -32,6 +32,7 @@ class Monitor:
         self.log_place = log_place
         self.nilou = bs.nilou
         self.dcm = dendro_core.DCManager(self)
+        self.flag_froze = bs.flag_froze
 
     def simulate(self):
         self.log_place.SetLabel('---模拟开始---\n')
@@ -359,7 +360,8 @@ class Monitor:
             tgt.element[2] = max(0, tgt.element[2] - quant)
 
         atk.element_mass -= quant
-        tgt.element[5] = max(tgt.element[5], 2 * quant)
+        if self.flag_froze:
+            tgt.element[5] = max(tgt.element[5], 2 * quant)
         self.log_action("%s对%s造成冻结，%s" % (atk.name, tgt.name, tgt.log_element_change()))
         return quant
 

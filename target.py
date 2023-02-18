@@ -39,7 +39,6 @@ class Target:
                 self.monitor.attack_list.append(atk)
 
 
-
     def time_advance(self, dt, time):
         # 冻结判断
         if self.element[5] > 0:
