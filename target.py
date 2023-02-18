@@ -14,13 +14,15 @@ class Target:
         self.element_string = "无元素附着"
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
-        # self.is_electro_charged = False  # 感电
+        self.frozen_time = 0
         self.electro_charged_source = 'None'  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
         self.geo_cd = 0  # 结晶CD
         self.coordinate_nahida_list = []  # 草神协同
         self.coordinate_shogun_list = []  # 雷神协同
         self.coordinate_albedo_list = []  # 阿贝多/迪协同
+
+        self.stat_frozen = []
 
     def coordinate(self, mode):
         coord_list = []
@@ -39,18 +41,20 @@ class Target:
                 self.monitor.attack_list.append(atk)
 
 
-    def time_advance(self, dt, time):
+    def time_advance(self, dt):
         # 冻结判断
         if self.element[5] > 0:
             self.decrease_spd[5] += 0.1 * dt
             if not self.is_frozen:
                 self.is_frozen = True
+                self.frozen_time = self.monitor.time
                 self.monitor.log_action("%s冻结" % self.name)
         else:
             if self.decrease_spd[5] > 0.4:
                 self.decrease_spd[5] = max(0.4, self.decrease_spd[5] - 0.2 * dt)
             if self.is_frozen:
                 self.is_frozen = False
+                self.stat_frozen.append([self.frozen_time, self.monitor.time])
                 self.monitor.log_action("%s解冻" % self.name)
 
         # 感电CD
@@ -119,3 +123,9 @@ class Target:
         canvas.canvas.draw()
         # ax.plot(t, element_hist[2], color="purple")
         # plt.show()
+
+    # 统计目标受到的攻击
+    # 受到xx攻击xx次，其中xx反应xx次（蒸发，融化，超激化。。）；xx反应xx次（绽放，超绽放，超载，感电，原激化，冻结）
+    # 冻结时长序列，总冻结时长
+    def stat(self):
+        pass
