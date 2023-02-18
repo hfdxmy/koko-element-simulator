@@ -29,6 +29,7 @@ class Monitor:
         self.target_list = [target.Target(self) for _ in range(bs.target_num)]
         self.flag_log_apply = bs.log_apply
         self.flag_log_quicken = bs.log_quicken
+        self.log = ''
         self.log_place = log_place
         self.nilou = bs.nilou
         self.dcm = dendro_core.DCManager(self)
@@ -55,7 +56,7 @@ class Monitor:
 
             # element decrease
             for t in range(self.target_num):
-                self.target_list[t].time_advance(dt, self.time)
+                self.target_list[t].time_advance(dt)
 
             # cd decrease
             for a in range(self.attack_num):
@@ -70,6 +71,7 @@ class Monitor:
             self.process_attack()  # 处理协同
 
         self.log_basic('---模拟结束---')
+        self.log_place.SetLabel(self.log)
         pass
 
     def process_attack(self):
@@ -105,7 +107,8 @@ class Monitor:
         self.target_list[0].print_element_hist(canvas, t)
 
     def log_basic(self, info):
-        self.log_place.SetLabel(self.log_place.GetLabel()+info)
+        # self.log_place.SetLabel(self.log_place.GetLabel()+info)
+        self.log += info
 
     def log_action(self, info):
         self.log_basic("(%.2fs)%s\n" % (self.time, info))
