@@ -37,7 +37,11 @@ class Monitor:
         self.log_place.SetLabel('---模拟开始---\n')
         for a in range(self.attack_num):
             if self.atk_set[a].attack_mode == '草神协同':
-                self.target_list[0].coordinate.append(a)
+                self.target_list[0].coordinate_nahida_list.append(a)
+            elif self.atk_set[a].attack_mode == '雷神协同':
+                self.target_list[0].coordinate_shogun_list.append(a)
+            elif self.atk_set[a].attack_mode == '阿贝多协同':
+                self.target_list[0].coordinate_albedo_list.append(a)
 
         for _ in range(self.steps):
             # deal with each attack
@@ -83,10 +87,15 @@ class Monitor:
                 # 如果带元素
                 self.reaction(tgt, atk)
             if atk.element_mass > -1:
+                # 先判断雷神协同
+                tgt.coordinate('shogun')
                 # 超烈绽放
                 if atk.element == '火' or atk.element == '雷':
                     self.dcm.core_reaction(self.target_list[0], atk)
-                # 如果不带元素，只检查协同触发
+                # 反应的元素量都是-1，不会触发雷神协同
+            if atk.element_mass > -2:
+                # 阿贝多和迪姐协同
+                tgt.coordinate('albedo')
                 pass
         pass
 
@@ -144,7 +153,7 @@ class Monitor:
                 tgt.electro_charge()  # 可能产生感电
 
             if reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
 
         elif atk.element == '火':  # 火
             if tgt.element[3] > 0:  # 目标有雷附着，超载
@@ -185,7 +194,7 @@ class Monitor:
                 reaction_flag = False
 
             if reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
 
         elif atk.element == 3:  # 风
             pass
@@ -240,7 +249,7 @@ class Monitor:
                 reaction_flag = False
 
             if quicken_flag or reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
             pass
 
         elif atk.element == '草':  # 草
@@ -272,7 +281,7 @@ class Monitor:
                 reaction_flag = False
 
             if quicken_flag or reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
 
         elif atk.element == '冰':  # 冰
             if tgt.element[3] > 0:  # 目标有雷附着，超导
@@ -307,7 +316,7 @@ class Monitor:
                 reaction_flag = False
 
             if reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
             pass
 
         elif atk.element == '岩':  # 岩
@@ -337,7 +346,7 @@ class Monitor:
                 reaction_flag = False
 
             if reaction_flag:
-                tgt.coordinate_attack()
+                tgt.coordinate('nahida')
             pass
 
     def reaction_froze(self, tgt, atk):

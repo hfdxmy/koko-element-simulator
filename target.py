@@ -18,13 +18,27 @@ class Target:
         self.electro_charged_source = 'None'  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
         self.geo_cd = 0  # 结晶CD
-        self.coordinate = []  # 协同
+        self.coordinate_nahida_list = []  # 草神协同
+        self.coordinate_shogun_list = []  # 雷神协同
+        self.coordinate_albedo_list = []  # 阿贝多/迪协同
 
-    def coordinate_attack(self):
-        for i in self.coordinate:
+    def coordinate(self, mode):
+        coord_list = []
+        if mode == 'nahida':
+            coord_list = self.coordinate_nahida_list
+        elif mode == 'shogun':
+            coord_list = self.coordinate_shogun_list
+        elif mode == 'albedo':
+            coord_list = self.coordinate_albedo_list
+        else:
+            self.monitor.log_action("未知协同")
+
+        for i in coord_list:
             atk = self.monitor.atk_set[i].generate_attack(self.monitor.time)
             if atk is not None:
                 self.monitor.attack_list.append(atk)
+
+
 
     def time_advance(self, dt, time):
         # 冻结判断
@@ -81,7 +95,7 @@ class Target:
         self.element[3] = max(0, self.element[3] - 0.4)
         self.monitor.log_action("%s感电，由%s触发，%s" % (self.name, self.electro_charged_source, self.log_element_change()))
         self.monitor.attack_list.append(attack.Attack('感电', '雷', -1))
-        self.coordinate_attack()
+        self.coordinate('nahida')
 
     def log_element_change(self):
         # print("%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string()))

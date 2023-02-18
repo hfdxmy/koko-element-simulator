@@ -70,5 +70,5 @@ class DCManager:
         elif method == 2:  # 烈绽放
             self.monitor.log_action("%s烈绽放，由%s触发" % (core.name, trigger))
             self.monitor.attack_list.append(attack.Attack('烈绽放', '草', -1, tag=['草核']))
-        core.parent.coordinate_attack()
+        core.parent.coordinate('nahida')
 
