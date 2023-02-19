@@ -55,20 +55,20 @@ class DCManager:
         for i in range(len(self.dc_list)).__reversed__():
             if self.dc_list[i].parent == tgt:
                 if atk.element == '雷':
-                    self.core_bloom(i, 1, atk.name)
+                    self.core_bloom(i, 1, atk)
                 elif atk.element == '火':
-                    self.core_bloom(i, 2, atk.name)
+                    self.core_bloom(i, 2, atk)
 
-    def core_bloom(self, core_id, method, trigger='None'):
+    def core_bloom(self, core_id, method, trigger=None):
         core = self.dc_list.pop(core_id)
         if method == 0:  # 普通绽放
-            self.monitor.log_action("由%s产生的%s原绽放" % (core.source, core.name))
-            self.monitor.attack_list.append(attack.Attack('原绽放', '草', -1, tag=['草核']))
+            self.monitor.log_action("由%s产生的%s原绽放" % (core.source.name, core.name))
+            self.monitor.attack_list.append(attack.Attack('原绽放', '草', -1, id=core.source.id))
         elif method == 1:  # 超绽放
-            self.monitor.log_action("%s超绽放，由%s触发，目标为%s" % (core.name, trigger, core.parent.name))
-            self.monitor.attack_list.append(attack.Attack('超绽放', '草', -1, tag=['草核']))
+            self.monitor.log_action("%s超绽放，由%s触发，目标为%s" % (core.name, trigger.name, core.parent.name))
+            self.monitor.attack_list.append(attack.Attack('超绽放', '草', -1, id=trigger.id))
         elif method == 2:  # 烈绽放
-            self.monitor.log_action("%s烈绽放，由%s触发" % (core.name, trigger))
-            self.monitor.attack_list.append(attack.Attack('烈绽放', '草', -1, tag=['草核']))
+            self.monitor.log_action("%s烈绽放，由%s触发" % (core.name, trigger.name))
+            self.monitor.attack_list.append(attack.Attack('烈绽放', '草', -1, id=trigger.id))
         core.parent.coordinate('nahida')
 

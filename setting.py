@@ -116,9 +116,9 @@ class AttackSetting:
         self.current_attack_cd = self.attack_cd
         if self.current_element_cd < 0.001:
             self.current_element_cd = self.element_cd
-            return Attack(self.name, self.element, self.element_mass)
+            return Attack(self.name, self.element, self.element_mass, id=self.setting_id-1)
         else:
-            return Attack(self.name, self.element, element_mass=0)
+            return Attack(self.name, self.element, element_mass=0, id=self.setting_id-1)
 
     pass
 

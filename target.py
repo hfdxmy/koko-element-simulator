@@ -1,7 +1,7 @@
 import attack
-from const import ATTACH_ELEMENT_DICT
+from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT
 import numpy as np
-import matplotlib.pyplot as plt
+
 
 class Target:
 
@@ -15,7 +15,7 @@ class Target:
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
         self.frozen_time = 0
-        self.electro_charged_source = 'None'  # 感电触发者
+        self.electro_charged_source = None  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
         self.geo_cd = 0  # 结晶CD
         self.coordinate_nahida_list = []  # 草神协同
@@ -23,6 +23,7 @@ class Target:
         self.coordinate_albedo_list = []  # 阿贝多/迪协同
 
         self.stat_frozen = []
+        self.stat_attack = []
 
     def coordinate(self, mode):
         coord_list = []
@@ -39,7 +40,6 @@ class Target:
             atk = self.monitor.atk_set[i].generate_attack(self.monitor.time)
             if atk is not None:
                 self.monitor.attack_list.append(atk)
-
 
     def time_advance(self, dt):
         # 冻结判断
@@ -96,8 +96,9 @@ class Target:
         self.electro_charged_cd = 1  # 感电冷却1秒
         self.element[0] = max(0, self.element[0] - 0.4)
         self.element[3] = max(0, self.element[3] - 0.4)
-        self.monitor.log_action("%s感电，由%s触发，%s" % (self.name, self.electro_charged_source, self.log_element_change()))
-        self.monitor.attack_list.append(attack.Attack('感电', '雷', -1))
+        # self.stat_attack[self.electro_charged_source.id][6] += 1
+        self.monitor.log_action("%s感电，由%s触发，%s" % (self.name, self.electro_charged_source.name, self.log_element_change()))
+        self.monitor.attack_list.append(attack.Attack('感电', '雷', -1, id=self.electro_charged_source.id))
         self.coordinate('nahida')
 
     def log_element_change(self):
@@ -125,7 +126,27 @@ class Target:
         # plt.show()
 
     # 统计目标受到的攻击
-    # 受到xx攻击xx次，其中xx反应xx次（蒸发，融化，超激化。。）；xx反应xx次（绽放，超绽放，超载，感电，原激化，冻结）
+    # 受到xx攻击xx次，带元素的xx次，其中xx反应xx次（蒸发，融化，超激化。。）；xx反应xx次（绽放，超绽放，超载，感电，原激化，冻结）
+    # 每个tgt对象，对于每个atk攻击有一个数组，依次记录受到攻击次数，元素次数。。。
+    # 剧变反应算谁的精通就记在谁身上
     # 冻结时长序列，总冻结时长
     def stat(self):
+        stat = self.name
+        stat += '：\n'
+        for i in range(self.monitor.attack_num):
+            stat += self.stat_attack_log(i)
+            stat += '\n'
         pass
+        return stat
+
+    def stat_attack_log(self, atk_id):
+        string_reaction = '产生'
+        for j in range(2, 26):
+            if self.stat_attack[atk_id][j] > 0:
+                if string_reaction != '产生':
+                    string_reaction += '，'
+                string_reaction += '%s%d次' % (ELEMENT_REACTION_DICT[j], self.stat_attack[atk_id][j])
+        if string_reaction == '产生':
+            string_reaction = '未触发反应'
+        string = '受到%s攻击%d次，其中%d次上元素，%s。' % (self.monitor.atk_set[atk_id].name, self.stat_attack[atk_id][0], self.stat_attack[atk_id][1], string_reaction)
+        return string
