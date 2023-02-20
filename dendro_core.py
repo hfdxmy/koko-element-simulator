@@ -1,4 +1,4 @@
-import attack
+from attack import Attack
 
 
 class DendroCore:
@@ -62,13 +62,13 @@ class DCManager:
     def core_bloom(self, core_id, method, trigger=None):
         core = self.dc_list.pop(core_id)
         if method == 0:  # 普通绽放
-            self.monitor.log_action("由%s产生的%s原绽放" % (core.source.name, core.name))
-            self.monitor.attack_list.append(attack.Attack('原绽放', '草', -1, id=core.source.id))
+            self.monitor.log_action("由%s产生的%s绽放" % (core.source.name, core.name))
+            self.monitor.attack_list.append(Attack('绽放', '草', -1, id=core.source.id, target=2))
         elif method == 1:  # 超绽放
             self.monitor.log_action("%s超绽放，由%s触发，目标为%s" % (core.name, trigger.name, core.parent.name))
-            self.monitor.attack_list.append(attack.Attack('超绽放', '草', -1, id=trigger.id))
+            self.monitor.attack_list.append(Attack('超绽放', '草', -1, id=trigger.id, target=core.parent.tgt_id))
         elif method == 2:  # 烈绽放
             self.monitor.log_action("%s烈绽放，由%s触发" % (core.name, trigger.name))
-            self.monitor.attack_list.append(attack.Attack('烈绽放', '草', -1, id=trigger.id))
+            self.monitor.attack_list.append(Attack('烈绽放', '草', -1, id=trigger.id, target=2))
         core.parent.coordinate('nahida')
 

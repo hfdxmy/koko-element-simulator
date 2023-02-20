@@ -1,16 +1,17 @@
 import attack
-from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT,decrease_speed
+from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT, decrease_speed
 import numpy as np
 
 
 class Target:
 
-    def __init__(self, monitor):
+    def __init__(self, monitor, tgt_id):
         self.element = [0, 0, 0, 0, 0, 0, 0, 0]  # 0水 1火 2冰 3雷 4草 5冻 6激 7燃
         self.decrease_spd = [0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0]  # 8和9用于临时存放草激在燃烧时的速度
         self.monitor = monitor
-        self.name = '目标1'
-        self.name_eng = 'Target 1'
+        self.tgt_id = tgt_id
+        self.name = '目标' + str(tgt_id)
+        self.name_eng = 'Target ' + str(tgt_id)
         self.element_string = "无元素附着"
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
@@ -116,7 +117,7 @@ class Target:
         self.electro_charged_cd = 1  # 感电冷却1秒
         # self.stat_attack[self.electro_charged_source.id][6] += 1
         self.monitor.log_action("%s感电，由%s触发。" % (self.name, self.electro_charged_source.name))
-        self.monitor.attack_list.append(attack.Attack('感电', '雷', -1, id=self.electro_charged_source.id))
+        self.monitor.attack_list.append(attack.Attack('感电', '雷', -1, target=self.tgt_id, id=self.electro_charged_source.id))
         self.coordinate('nahida')
 
     def log_element_change(self):
@@ -161,7 +162,7 @@ class Target:
         return stat
 
     def stat_attack_log(self, atk_id):
-        string_reaction = '产生'
+        string_reaction = '受到'
         for j in range(2, 26):
             if self.stat_attack[atk_id][j] > 0:
                 if string_reaction != '产生':
@@ -184,7 +185,7 @@ class Target:
         if self.burning_cd == 0:
             self.burning_cd = 0.25 - 0.001
             self.monitor.log_burning("%s燃烧，由%s触发。" % (self.name, self.burning_source.name))
-            self.monitor.attack_list.append(attack.Attack('燃烧', '火', -1, id=self.burning_source.id))
+            self.monitor.attack_list.append(attack.Attack('燃烧', '火', -1, target=self.tgt_id, id=self.burning_source.id))
             if self.burning_fire_cd == 0:
                 self.burning_fire_cd = 2 - 0.001
                 if self.element[1] < 0.8:  # 如果火<0.8，则挂火并刷新衰减速度

@@ -1,23 +1,19 @@
-import attack
+from attack import Attack
 import dendro_core
 import target
 import numpy as np
 from const import ELEMENT_REACTION_DICT_REV, decrease_speed
-dt = 0.01
 
 
 class Monitor:
 
     def __init__(self, bs, atk_set, log_place):  # bs short for basic setting
         self.time = 0
+        self.dt = bs.dt
         self.max_time = bs.max_time
-        self.target_num = bs.target_num
         self.attack_num = bs.attack_num
         self.atk_set = atk_set
 
-        self.steps = int(bs.max_time / dt)
-        self.attack_list: list[attack.Attack] = []
-        self.target_list = [target.Target(self) for _ in range(bs.target_num)]
         self.flag_log_apply = bs.log_apply
         self.flag_log_quicken = bs.log_quicken
         self.flag_log_burning = bs.log_burning
@@ -26,16 +22,25 @@ class Monitor:
         self.nilou = bs.nilou
         self.dcm = dendro_core.DCManager(self)
         self.flag_froze = bs.flag_froze
+        self.single_target = bs.single_target
+
+        self.steps = int(bs.max_time / self.dt)
+        self.attack_list: list[Attack] = []
+        if self.single_target:
+            self.target_list = [target.Target(self, i+1) for i in range(1)]
+        else:
+            self.target_list = [target.Target(self, i+1) for i in range(2)]
 
     def simulate(self):
-        for a in range(self.attack_num):
-            self.target_list[0].stat_attack.append([0 for _ in range(26)])
-            if self.atk_set[a].attack_mode == '草神协同':
-                self.target_list[0].coordinate_nahida_list.append(a)
-            elif self.atk_set[a].attack_mode == '雷神协同':
-                self.target_list[0].coordinate_shogun_list.append(a)
-            elif self.atk_set[a].attack_mode == '阿贝多协同':
-                self.target_list[0].coordinate_albedo_list.append(a)
+        for tgt in self.target_list:
+            for a in range(self.attack_num):
+                tgt.stat_attack.append([0 for _ in range(27)])
+                if self.atk_set[a].attack_mode == '草神协同':
+                    tgt.coordinate_nahida_list.append(a)
+                elif self.atk_set[a].attack_mode == '雷神协同':
+                    tgt.coordinate_shogun_list.append(a)
+                elif self.atk_set[a].attack_mode == '阿贝多协同':
+                    tgt.coordinate_albedo_list.append(a)
 
         self.log_place.SetLabel('---模拟开始---\n')
 
@@ -49,61 +54,73 @@ class Monitor:
                         self.process_attack()
 
             # element decrease
-            for t in range(self.target_num):
-                self.target_list[t].time_advance(dt)
+            for tgt in self.target_list:
+                tgt.time_advance(self.dt)
 
             # cd decrease
-            for a in range(self.attack_num):
-                self.atk_set[a].time_advance(dt)
+            for a in self.atk_set:
+                a.time_advance(self.dt)
 
             # dendro-core life
-            self.dcm.time_advance(dt)
+            self.dcm.time_advance(self.dt)
 
             self.process_attack()  # 处理协同
             # 协同之后可能还需要继续check，比如产生了新的草原核？
 
             # time advance
-            self.time += dt
+            self.time += self.dt
         self.log_basic('---结果统计---\n')
         self.log_basic(self.target_list[0].stat())
+        if not self.single_target:
+            self.log_basic(self.target_list[1].stat())
         self.log_place.SetLabel(self.log)
         pass
 
     def process_attack(self):
         while len(self.attack_list) > 0:
             atk = self.attack_list.pop(0)
-
+            atk_elem = atk.element_mass
             # 对atk的每个tgt id判断一次
-            tgt = self.target_list[0]
+            tgt_list = [0]
+            if atk.target == 1:
+                tgt_list = [1]
+            elif atk.target == 2:
+                tgt_list = [0, 1]
 
-            if atk.element_mass == -1:  # 元素反应的元素量都是-1
-                tgt.stat_attack[atk.id][ELEMENT_REACTION_DICT_REV[atk.name]] += 1
+            for tgt_id in tgt_list:
+                if self.single_target and tgt_id == 1:
+                    continue
+                tgt = self.target_list[tgt_id]
+                atk.element_mass = atk_elem
 
-            # 岩击碎冰
-            if atk.element == '岩' and tgt.element[5] > 0:
-                tgt.element[5] = 0
-                self.log_action("%s使得%s碎冰，%s" % (atk.name, tgt.name, self.target_list[0].log_element_change()))
-                self.attack_list.append(attack.Attack('碎冰', id=atk.id))  # 碎冰可以触发草神吗？
+                if atk.element_mass == -1:  # 元素反应的元素量都是-1
+                    tgt.stat_attack[atk.id][ELEMENT_REACTION_DICT_REV[atk.name]] += 1
 
-            if atk.element_mass > 0:
-                # 如果带元素
-                tgt.stat_attack[atk.id][1] += 1  # 记录一次元素攻击
-                self.reaction(tgt, atk)
+                # 岩击碎冰
+                if atk.element == '岩' and tgt.element[5] > 0:
+                    tgt.element[5] = 0
+                    self.log_action("%s使得%s碎冰，%s" % (atk.name, tgt.name, self.target_list[0].log_element_change()))
+                    self.attack_list.append(Attack('碎冰', id=atk.id, target=tgt_id))
+                    tgt.coordinate('nahida')  # 碎冰可以触发草神吗？
 
-            if atk.element_mass > -1:
-                # 记录一次攻击
-                tgt.stat_attack[atk.id][0] += 1
-                # 判断雷神协同
-                tgt.coordinate('shogun')
-                # 超烈绽放
-                if atk.element == '火' or atk.element == '雷':
-                    self.dcm.core_reaction(self.target_list[0], atk)
-                # 反应的元素量都是-1，不会触发雷神协同
+                if atk.element_mass > 0:
+                    # 如果带元素
+                    tgt.stat_attack[atk.id][1] += 1  # 记录一次元素攻击
+                    self.reaction(tgt, atk)
 
-            if atk.element_mass > -2:
-                # 阿贝多和迪姐协同
-                tgt.coordinate('albedo')
+                if atk.element_mass > -1:
+                    tgt.stat_attack[atk.id][0] += 1  # 记录一次攻击
+                    # 判断雷神协同
+                    tgt.coordinate('shogun')
+                    # 超烈绽放
+                    if atk.element == '火' or atk.element == '雷':
+                        self.dcm.core_reaction(self.target_list[0], atk)
+                    # 反应的元素量都是-1，不会触发雷神协同和绽放
 
+                if atk.element_mass > -2:
+                    # 阿贝多受击协同
+                    tgt.coordinate('albedo')
+            pass  # for t in tgt_list
         pass
 
     def plot(self, canvas):
@@ -149,7 +166,7 @@ class Monitor:
                     if tgt.electro_charged_cd == 0:
                         self.log_action("%s特殊感电，由%s触发。" % (tgt.name, atk.name))
                         # tgt.stat_attack[atk.id][6] += 1
-                        self.attack_list.append(attack.Attack('感电', '雷', -1, id=atk.id))
+                        self.attack_list.append(Attack('感电', '雷', -1, id=atk.id))
                         tgt.electro_charged_cd = 1
 
             elif tgt.element[0] > 0:  # 目标有水附着
@@ -462,7 +479,7 @@ class Monitor:
             tgt.element[3] = max(0, tgt.element[3] - atk.element_mass)
 
         atk.element_mass -= quant
-        self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=-1, target=[0], id=atk.id))
+        self.attack_list.append(Attack(name='超载', element='火', element_mass=-1, target=2, id=atk.id))
         # tgt.stat_attack[atk.id][7] += 1
         self.log_action("%s在%s触发超载，%s" % (atk.name, tgt.name, tgt.log_element_change()))
         if tgt.is_burning and tgt.element[7] == 0:
@@ -488,7 +505,7 @@ class Monitor:
             tgt.element[3] = max(0, tgt.element[3] - atk.element_mass)
 
         atk.element_mass -= quant
-        self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=-1, target=[0], id=atk.id))
+        self.attack_list.append(Attack(name='超导', element='冰', element_mass=-1, target=2, id=atk.id))
         # tgt.stat_attack[atk.id][5] += 1
         self.log_action("%s在%s触发超导，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 

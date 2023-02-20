@@ -69,7 +69,7 @@ class MainFrame(wx.Frame):
 
         # .2 init setting title
         self.bs_setting_title = wx.BoxSizer()
-        for i in range(0, 10):
+        for i in range(0, 11):
             self.bs_setting_title.Add(wx.StaticText(self.panel, style=wx.ALIGN_CENTER, label=SETTING_TITLE[i]),
                                       proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 
