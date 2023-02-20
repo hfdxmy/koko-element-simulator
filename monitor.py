@@ -2,17 +2,8 @@ import attack
 import dendro_core
 import target
 import numpy as np
-from const import ELEMENT_REACTION_DICT_REV
-dt = 0.02
-
-
-def decrease_speed(element, element_mass):
-    spd = 0
-    if element == '水' or element == '火' or element == '雷' or element == '冰' or element == '草':  # 水，火，雷，冰，草附着
-        spd = 0.8 * element_mass / (element_mass * 2.5 + 7)
-    if element == '激':
-        spd = element_mass / (5 * element_mass + 6)
-    return spd
+from const import ELEMENT_REACTION_DICT_REV, decrease_speed
+dt = 0.01
 
 
 class Monitor:
@@ -29,6 +20,7 @@ class Monitor:
         self.target_list = [target.Target(self) for _ in range(bs.target_num)]
         self.flag_log_apply = bs.log_apply
         self.flag_log_quicken = bs.log_quicken
+        self.flag_log_burning = bs.log_burning
         self.log = ''
         self.log_place = log_place
         self.nilou = bs.nilou
@@ -133,12 +125,18 @@ class Monitor:
         if self.flag_log_quicken:
             self.log_action(info)
 
+    def log_burning(self, info):
+        if self.flag_log_burning:
+            self.log_action(info)
+
     def reaction(self, tgt, atk):
         reaction_flag = True
 
         if atk.element == '水':  # 水攻击
             if tgt.element[1] > 0:  # 目标有火元素附着
                 self.reaction_vaporize(tgt, atk)
+                if atk.element_mass > 0.01 and (tgt.element[4] > 0 or tgt.element[6] > 0):  # 草元素或激元素
+                    self.reaction_bloom(tgt, atk)
             elif tgt.element[2] > 0:  # 目标有冰元素附着，冻结
                 self.reaction_froze(tgt, atk)
                 if (tgt.element[4] > 0 or tgt.element[6] > 0) and atk.element_mass > 0.01:  # 水过量，且有激草
@@ -149,7 +147,7 @@ class Monitor:
 
                 if atk.element_mass > 0.01 and tgt.element[3] > 0:  # 水过量，强制触发一次感电，不进行附着
                     if tgt.electro_charged_cd == 0:
-                        self.log_action("%s感电，由%s触发" % (tgt.name, atk.name))
+                        self.log_action("%s特殊感电，由%s触发。" % (tgt.name, atk.name))
                         # tgt.stat_attack[atk.id][6] += 1
                         self.attack_list.append(attack.Attack('感电', '雷', -1, id=atk.id))
                         tgt.electro_charged_cd = 1
@@ -157,7 +155,7 @@ class Monitor:
             elif tgt.element[0] > 0:  # 目标有水附着
                 if atk.element_mass * 0.8 > tgt.element[0]:
                     tgt.element[0] = atk.element_mass * 0.8
-                    tgt.electro_charged_source = atk.name
+                    tgt.electro_charged_source = atk
                     self.log_apply("%s刷新%s的水元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
 
@@ -167,7 +165,7 @@ class Monitor:
                 tgt.electro_charged_source = atk  # 刷新感电精通来源
                 self.log_apply("%s对%s造成水元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
-                tgt.electro_charge()  # 可能产生感电
+                # tgt.electro_charge()  # 可能产生感电
 
             if reaction_flag:
                 tgt.coordinate('nahida')
@@ -175,12 +173,16 @@ class Monitor:
         elif atk.element == '火':  # 火
             if tgt.element[3] > 0:  # 目标有雷附着，超载
                 self.reaction_overload(tgt, atk)
-
-                if atk.element_mass > 0 and tgt.element[0] > 0:  # 过量火继续蒸发
-                    self.reaction_vaporize(tgt, atk)
+                if atk.element_mass > 0.01:  # 过量火
+                    if tgt.element[0] > 0:  # 过量火继续蒸发
+                        self.reaction_vaporize(tgt, atk)
+                    elif tgt.element[6] > 0:  #激雷共存，过量火启动燃烧，之前肯定没有燃
+                        self.reaction_burning(tgt, atk)
 
             elif tgt.element[2] > 0 or tgt.element[5] > 0:  # 目标有冰或冻附着，融化
                 self.reaction_melt(tgt, atk)
+                if atk.element_mass > 0 and (tgt.element[4] or tgt.element[6]) > 0:  # 过量火燃烧
+                    self.reaction_burning(tgt, atk)
 
             elif tgt.element[0] > 0:  # 目标有水附着
                 self.reaction_vaporize(tgt, atk)
@@ -189,14 +191,21 @@ class Monitor:
                 if atk.element_mass * 0.8 > tgt.element[1]:
                     tgt.element[1] = atk.element_mass * 0.8
                     tgt.decrease_spd[1] = decrease_speed(atk.element, atk.element_mass)  # 3.0后衰减速度也覆盖
+                    tgt.burning_source = atk  # 刷新来源
                     self.log_apply("%s刷新%s的火元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
 
             else:  # 目标无附着，造成火元素附着，计算衰减速度
                 tgt.element[1] = atk.element_mass * 0.8
                 tgt.decrease_spd[1] = decrease_speed(atk.element, atk.element_mass)
+                tgt.burning_source = atk  # 刷新来源
                 self.log_apply("%s对%s造成火元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
+
+            if tgt.element[1] > 0 and (tgt.element[4] > 0 or tgt.element[6] > 0):  # 目标有草或者激附着
+                if tgt.element[7] == 0:  # 启动燃烧
+                    self.reaction_burning(tgt, atk)
+                    reaction_flag = True
 
             if reaction_flag:
                 tgt.coordinate('nahida')
@@ -213,6 +222,8 @@ class Monitor:
 
             if tgt.element[1] > 0:  # 目标有火附着，超载
                 self.reaction_overload(tgt, atk)
+                if atk.element_mass > 0.01 and tgt.element[4] > 0:
+                    self.reaction_quicken(tgt, atk)
 
             elif tgt.element[2] > 0 or tgt.element[5] > 0:  # 目标有冰附着或冻附着，超导，先消耗藏冰
                 self.reaction_superconduct(tgt, atk)
@@ -225,7 +236,7 @@ class Monitor:
             elif tgt.element[3] > 0:  # 目标有雷附着
                 if atk.element_mass * 0.8 > tgt.element[3]:
                     tgt.element[3] = atk.element_mass * 0.8
-                    tgt.electro_charged_source = atk.name
+                    tgt.electro_charged_source = atk
                     self.log_apply("%s刷新%s的雷元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
 
@@ -234,7 +245,7 @@ class Monitor:
                 tgt.decrease_spd[3] = decrease_speed(atk.element, atk.element_mass)
                 tgt.electro_charged_source = atk
                 self.log_apply("%s对%s造成雷元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-                tgt.electro_charge()
+                # tgt.electro_charge()
                 reaction_flag = False
 
             if quicken_flag or reaction_flag:
@@ -258,9 +269,6 @@ class Monitor:
                     atk.element_mass = tgt.element[6]
                     self.reaction_bloom(tgt, atk, self_reaction=True)
 
-            elif tgt.element[1] > 0:  # 燃烧
-                pass
-
             elif tgt.element[0] > 0:  # 绽放
                 self.reaction_bloom(tgt, atk)
 
@@ -268,13 +276,23 @@ class Monitor:
                 if atk.element_mass * 0.8 > tgt.element[4]:
                     tgt.element[4] = atk.element_mass * 0.8
                     self.log_apply("%s刷新%s的草元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+                    tgt.burning_source = atk
                 reaction_flag = False
 
             else:  # 草附着
                 tgt.element[4] = atk.element_mass * 0.8
-                tgt.decrease_spd[4] = decrease_speed(atk.element, atk.element_mass)
+                if tgt.element[7] == 0:
+                    tgt.decrease_spd[4] = decrease_speed(atk.element, atk.element_mass)
+                else:  # 燃烧时衰减速度先存到8号位
+                    tgt.decrease_spd[8] = decrease_speed(atk.element, atk.element_mass)
+                tgt.burning_source = atk
                 self.log_apply("%s对%s造成草元素附着，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
+
+            if (tgt.element[4] > 0 or tgt.element[6] > 0) and tgt.element[1] > 0:  # 目标有火附着
+                if tgt.element[7] == 0:  # 启动燃烧
+                    self.reaction_burning(tgt, atk)
+                    reaction_flag = True
 
             if quicken_flag or reaction_flag:
                 tgt.coordinate('nahida')
@@ -286,7 +304,7 @@ class Monitor:
                 if atk.element_mass > 0 and tgt.element[0] > 0:  # 过量冰继续冻结
                     self.reaction_froze(tgt, atk)
 
-            elif tgt.element[1] > 0:  # 目标有火附着，融化
+            elif tgt.element[1] > 0 or tgt.element[7] > 0:  # 目标有火附着，融化
                 self.reaction_melt(tgt, atk)
 
             elif tgt.element[0] > 0:  # 目标有水附着，冻结
@@ -397,26 +415,48 @@ class Monitor:
     def reaction_melt(self, tgt, atk):
         if atk.element == '冰':
             tgt.element[1] = max(0, tgt.element[1] - atk.element_mass / 2)
+            tgt.element[7] = max(0, tgt.element[7] - atk.element_mass / 2)
         elif atk.element == '火':
             tgt.element[2] = max(0, tgt.element[2] - atk.element_mass * 2)
             tgt.element[5] = max(0, tgt.element[5] - atk.element_mass * 2)
 
         tgt.stat_attack[atk.id][4] += 1
         self.log_action("%s在%s发生融化，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+        if tgt.is_burning and tgt.element[7] == 0:
+            tgt.burning_finalize()
 
     def reaction_vaporize(self, tgt, atk):
+        quant = 0
         if atk.element == '水':
-            tgt.element[1] = max(0, tgt.element[1] - atk.element_mass * 2)
+            if tgt.element[1] > tgt.element[7]:
+                quant = min(atk.element_mass, tgt.element[1] / 2)
+                tgt.element[1] = max(0, tgt.element[1] - atk.element_mass * 2)
+                tgt.element[7] = max(0, tgt.element[7] - quant * 2)
+            else:
+                quant = min(atk.element_mass, tgt.element[7] / 2)
+                tgt.element[1] = max(0, tgt.element[1] - quant * 2)
+                tgt.element[7] = max(0, tgt.element[7] - atk.element_mass * 2)
         if atk.element == '火':
+            quant = min(atk.element_mass, tgt.element[0] * 2)
             tgt.element[0] = max(0, tgt.element[0] - atk.element_mass / 2)
+
+        atk.element_mass -= quant
         tgt.stat_attack[atk.id][2] += 1
         self.log_action("%s在%s发生蒸发，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+        if tgt.is_burning and tgt.element[7] == 0:
+            tgt.burning_finalize()
 
     def reaction_overload(self, tgt, atk):
         quant = 0
         if atk.element == '雷':
-            quant = min(atk.element_mass, tgt.element[1])
-            tgt.element[1] = max(0, tgt.element[1] - atk.element_mass)
+            if tgt.element[1] > tgt.element[7]:
+                quant = min(atk.element_mass, tgt.element[1])
+                tgt.element[1] = max(0, tgt.element[1] - atk.element_mass)
+                tgt.element[7] = max(0, tgt.element[7] - quant)
+            else:
+                quant = min(atk.element_mass, tgt.element[7])
+                tgt.element[1] = max(0, tgt.element[1] - quant)
+                tgt.element[7] = max(0, tgt.element[7] - atk.element_mass)
         elif atk.element == '火':
             quant = min(atk.element_mass, tgt.element[3])
             tgt.element[3] = max(0, tgt.element[3] - atk.element_mass)
@@ -425,6 +465,8 @@ class Monitor:
         self.attack_list.append(attack.Attack(name='超载', element='火', element_mass=-1, target=[0], id=atk.id))
         # tgt.stat_attack[atk.id][7] += 1
         self.log_action("%s在%s触发超载，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+        if tgt.is_burning and tgt.element[7] == 0:
+            tgt.burning_finalize()
 
     def reaction_superconduct(self, tgt, atk):
         quant = 0
@@ -449,3 +491,15 @@ class Monitor:
         self.attack_list.append(attack.Attack(name='超导', element='冰', element_mass=-1, target=[0], id=atk.id))
         # tgt.stat_attack[atk.id][5] += 1
         self.log_action("%s在%s触发超导，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+    def reaction_burning(self, tgt, atk):
+        tgt.element[7] = 2  # 产生2单位燃元素
+        tgt.burning_cd = 0.35  # 首次启动时加0.1秒
+        tgt.decrease_spd[8] = tgt.decrease_spd[4]  # 8号暂存草消耗速度
+        tgt.decrease_spd[9] = tgt.decrease_spd[6]  # 9号暂存激消耗速度
+        tgt.decrease_spd[4] = 0.4  # 草元素固定消耗速度
+        tgt.decrease_spd[6] = 0.4
+        tgt.burning_source = atk
+        tgt.is_burning = True
+        self.log_action("%s在%s启动燃烧，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+        # tgt.coordinate('nahida')

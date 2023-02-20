@@ -136,6 +136,8 @@ class BasicSetting:
         self.bs.Add(self.input_log_apply)
         self.input_log_quicken = wx.CheckBox(parent, label='记录激化')
         self.bs.Add(self.input_log_quicken)
+        self.input_log_burning = wx.CheckBox(parent, label='记录燃烧')
+        self.bs.Add(self.input_log_burning)
         self.input_nilou = wx.CheckBox(parent, label='妮绽放')
         self.bs.Add(self.input_nilou)
         self.input_flag_froze = wx.CheckBox(parent, label='不可冻结')
@@ -146,6 +148,7 @@ class BasicSetting:
         self.log_place = log_place
         self.log_apply = True
         self.log_quicken = True
+        self.log_burning = False
         self.nilou = False
         self.flag_froze = True
 
@@ -162,6 +165,7 @@ class BasicSetting:
 
         self.log_apply = self.input_log_apply.GetValue()
         self.log_quicken = self.input_log_quicken.GetValue()
+        self.log_burning = self.input_log_burning.GetValue()
         self.nilou = self.input_nilou.GetValue()
         self.flag_froze = not (self.input_flag_froze.GetValue())
         return True

@@ -12,3 +12,12 @@ ELEMENT_REACTION_DICT_REV = {'蒸发': 2, '冻结': 3, '融化': 4, '超导': 5,
                              '水扩散': 8, '火扩散': 9, '雷扩散': 10, '冰扩散': 11, '冻扩散': 12,
                              '原激化': 13, '超激化': 14, '蔓激化': 15, '原绽放': 16, '烈绽放': 17, '超绽放': 18,
                              '燃烧': 19, '水结晶': 20, '火结晶': 21, '雷结晶': 22, '冰结晶': 23, '冻结晶': 24, '碎冰': 25}
+
+
+def decrease_speed(element, element_mass):
+    spd = 0
+    if element == '水' or element == '火' or element == '雷' or element == '冰' or element == '草':  # 水，火，雷，冰，草附着
+        spd = 0.8 * element_mass / (element_mass * 2.5 + 7)
+    if element == '激':
+        spd = element_mass / (5 * element_mass + 6)
+    return spd

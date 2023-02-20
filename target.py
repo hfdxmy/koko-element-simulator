@@ -1,5 +1,5 @@
 import attack
-from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT
+from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT,decrease_speed
 import numpy as np
 
 
@@ -7,7 +7,7 @@ class Target:
 
     def __init__(self, monitor):
         self.element = [0, 0, 0, 0, 0, 0, 0, 0]  # 0水 1火 2冰 3雷 4草 5冻 6激 7燃
-        self.decrease_spd = [0, 0, 0, 0, 0, 0.4, 0, 0]
+        self.decrease_spd = [0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0]  # 8和9用于临时存放草激在燃烧时的速度
         self.monitor = monitor
         self.name = '目标1'
         self.name_eng = 'Target 1'
@@ -15,9 +15,16 @@ class Target:
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
         self.frozen_time = 0
+        self.electro_charged_tag = False
         self.electro_charged_source = None  # 感电触发者
         self.electro_charged_cd = 0  # 感电CD
         self.geo_cd = 0  # 结晶CD
+
+        self.is_burning = False
+        self.burning_source = None
+        self.burning_fire_cd = 0
+        self.burning_cd = 0
+
         self.coordinate_nahida_list = []  # 草神协同
         self.coordinate_shogun_list = []  # 雷神协同
         self.coordinate_albedo_list = []  # 阿贝多/迪协同
@@ -62,6 +69,13 @@ class Target:
         if self.electro_charged_cd > 0:
             self.electro_charged_cd = max(0, self.electro_charged_cd - dt)
 
+        # 燃烧逻辑
+        self.burning()
+        if self.burning_cd > 0:
+            self.burning_cd = max(0, self.burning_cd - dt)
+        if self.burning_fire_cd > 0:
+            self.burning_fire_cd = max(0, self.burning_fire_cd - dt)
+
         # 结晶CD
         if self.geo_cd > 0:
             self.geo_cd = max(0, self.geo_cd - dt)
@@ -88,16 +102,20 @@ class Target:
         return string
 
     def electro_charge(self):
+        if self.electro_charged_tag:
+            self.element[0] = max(0, self.element[0] - 0.4)
+            self.element[3] = max(0, self.element[3] - 0.4)
+            self.monitor.log_action("%s感电扣除元素，%s" % (self.name, self.log_element_change()))
+            self.electro_charged_tag = False
         if self.element[0] == 0 or self.element[3] == 0:
             return
         if self.electro_charged_cd > 0:
             return
 
+        self.electro_charged_tag = True  # 将
         self.electro_charged_cd = 1  # 感电冷却1秒
-        self.element[0] = max(0, self.element[0] - 0.4)
-        self.element[3] = max(0, self.element[3] - 0.4)
         # self.stat_attack[self.electro_charged_source.id][6] += 1
-        self.monitor.log_action("%s感电，由%s触发，%s" % (self.name, self.electro_charged_source.name, self.log_element_change()))
+        self.monitor.log_action("%s感电，由%s触发。" % (self.name, self.electro_charged_source.name))
         self.monitor.attack_list.append(attack.Attack('感电', '雷', -1, id=self.electro_charged_source.id))
         self.coordinate('nahida')
 
@@ -118,7 +136,9 @@ class Target:
             if element_hist_max[i] > 0.1:
                 ax.plot(t, element_hist[i], color=element_plot_color[i], label=element_plot_name[i], linewidth=1)
         ax.legend(loc='upper right')
-        ax.set_xticks(np.arange(0, t[-1], 1.0))
+        ax.set_xticks(np.arange(0, t[-1]+1, 1.0))
+        if t[-1] < 10.01:
+            ax.set_xticks(np.arange(0, t[-1] + 1, 0.5))
         ax.grid()
         ax.set_title(self.name_eng)
         canvas.canvas.draw()
@@ -134,8 +154,9 @@ class Target:
         stat = self.name
         stat += '：\n'
         for i in range(self.monitor.attack_num):
-            stat += self.stat_attack_log(i)
-            stat += '\n'
+            if self.monitor.atk_set[i].is_active:
+                stat += self.stat_attack_log(i)
+                stat += '\n'
         pass
         return stat
 
@@ -150,3 +171,31 @@ class Target:
             string_reaction = '未触发反应'
         string = '受到%s攻击%d次，其中%d次上元素，%s。' % (self.monitor.atk_set[atk_id].name, self.stat_attack[atk_id][0], self.stat_attack[atk_id][1], string_reaction)
         return string
+
+    def burning(self):
+        if not self.is_burning:
+            return
+        if self.element[4] == 0 and self.element[6] == 0:  # 草和激都消耗完
+            self.element[7] = 0
+        if self.element[7] == 0:    # 燃元素消耗完，把草激元素的衰减速度还回去
+            self.burning_finalize()
+            return
+        # 此时存在燃草
+        if self.burning_cd == 0:
+            self.burning_cd = 0.25 - 0.001
+            self.monitor.log_burning("%s燃烧，由%s触发。" % (self.name, self.burning_source.name))
+            self.monitor.attack_list.append(attack.Attack('燃烧', '火', -1, id=self.burning_source.id))
+            if self.burning_fire_cd == 0:
+                self.burning_fire_cd = 2 - 0.001
+                if self.element[1] < 0.8:  # 如果火<0.8，则挂火并刷新衰减速度
+                    self.element[1] = 0.8
+                    self.decrease_spd[1] = decrease_speed('火', 0.8)
+                    self.monitor.log_action("%s燃烧上火，%s" % (self.name, self.log_element_change()))
+            pass
+            self.coordinate('nahida')
+
+    def burning_finalize(self):
+        self.decrease_spd[4] = self.decrease_spd[8]
+        self.decrease_spd[6] = self.decrease_spd[9]
+        self.is_burning = False
+        self.monitor.log_action("%s燃烧结束。" % self.name)
