@@ -21,3 +21,10 @@ def decrease_speed(element, element_mass):
     if element == '激':
         spd = element_mass / (5 * element_mass + 6)
     return spd
+
+
+def swirl_element_mass(anemo_mass, target_mass):
+    if anemo_mass / 2 < target_mass:
+        return 0.95 + 1.25 * anemo_mass
+    else:
+        return 0.95 + 1.25 * target_mass

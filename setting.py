@@ -123,9 +123,9 @@ class AttackSetting:
         self.current_attack_cd = self.attack_cd
         if self.current_element_cd < 0.001:
             self.current_element_cd = self.element_cd
-            return Attack(self.name, self.element, element_mass=self.element_mass, target=self.attack_target, id=self.setting_id-1)
+            return Attack(self.name, self.element, element_mass=self.element_mass, target=self.attack_target, id=self.setting_id-1, tag='角色')
         else:
-            return Attack(self.name, self.element, element_mass=0, target=self.attack_target, id=self.setting_id-1)
+            return Attack(self.name, self.element, element_mass=0, target=self.attack_target, id=self.setting_id-1, tag='角色')
 
 
 class BasicSetting:

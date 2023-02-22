@@ -63,12 +63,12 @@ class DCManager:
         core = self.dc_list.pop(core_id)
         if method == 0:  # 普通绽放
             self.monitor.log_action("由%s产生的%s绽放" % (core.source.name, core.name))
-            self.monitor.attack_list.append(Attack('绽放', '草', -1, id=core.source.id, target=2))
+            self.monitor.attack_list.append(Attack('绽放', '草', -1, id=core.source.id, target=2, tag='剧变'))
         elif method == 1:  # 超绽放
             self.monitor.log_action("%s超绽放，由%s触发，目标为%s" % (core.name, trigger.name, core.parent.name))
-            self.monitor.attack_list.append(Attack('超绽放', '草', -1, id=trigger.id, target=core.parent.tgt_id))
+            self.monitor.attack_list.append(Attack('超绽放', '草', -1, id=trigger.id, target=core.parent.tgt_id, tag='剧变'))
         elif method == 2:  # 烈绽放
             self.monitor.log_action("%s烈绽放，由%s触发" % (core.name, trigger.name))
-            self.monitor.attack_list.append(Attack('烈绽放', '草', -1, id=trigger.id, target=2))
+            self.monitor.attack_list.append(Attack('烈绽放', '草', -1, id=trigger.id, target=2, tag='剧变'))
         core.parent.coordinate('nahida')
 

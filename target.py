@@ -10,8 +10,8 @@ class Target:
         self.decrease_spd = [0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0]  # 8和9用于临时存放草激在燃烧时的速度
         self.monitor = monitor
         self.tgt_id = tgt_id
-        self.name = '目标' + str(tgt_id)
-        self.name_eng = 'Target ' + str(tgt_id)
+        self.name = '目标' + str(tgt_id + 1)
+        self.name_eng = 'Target ' + str(tgt_id + 1)
         self.element_string = "无元素附着"
         self.element_hist = [self.element.copy()]
         self.is_frozen = False  # 冻结
@@ -117,7 +117,7 @@ class Target:
         self.electro_charged_cd = 1  # 感电冷却1秒
         # self.stat_attack[self.electro_charged_source.id][6] += 1
         self.monitor.log_action("%s感电，由%s触发。" % (self.name, self.electro_charged_source.name))
-        self.monitor.attack_list.append(attack.Attack('感电', '雷', -1, target=self.tgt_id, id=self.electro_charged_source.id))
+        self.monitor.attack_list.append(attack.Attack('感电', '雷', target=self.tgt_id, id=self.electro_charged_source.id))
         self.coordinate('nahida')
 
     def log_element_change(self):
@@ -162,15 +162,25 @@ class Target:
         return stat
 
     def stat_attack_log(self, atk_id):
-        string_reaction = '受到'
-        for j in range(2, 26):
+        string_reaction1 = '，该攻击产生'
+        for j in [2, 3, 4, 13, 14, 15, 16, 21, 22, 23, 24, 25, 26]:
             if self.stat_attack[atk_id][j] > 0:
-                if string_reaction != '产生':
-                    string_reaction += '，'
-                string_reaction += '%s%d次' % (ELEMENT_REACTION_DICT[j], self.stat_attack[atk_id][j])
-        if string_reaction == '产生':
-            string_reaction = '未触发反应'
-        string = '受到%s攻击%d次，其中%d次上元素，%s。' % (self.monitor.atk_set[atk_id].name, self.stat_attack[atk_id][0], self.stat_attack[atk_id][1], string_reaction)
+                if string_reaction1 != '，该攻击产生':
+                    string_reaction1 += '，'
+                string_reaction1 += '%s%d次' % (ELEMENT_REACTION_DICT[j], self.stat_attack[atk_id][j])
+
+        string_reaction2 = '，受到由该攻击触发的'
+        for j in [5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20]:
+            if self.stat_attack[atk_id][j] > 0:
+                if string_reaction2 != '，受到由该攻击触发的':
+                    string_reaction2 += '，'
+                string_reaction2 += '%s%d次' % (ELEMENT_REACTION_DICT[j], self.stat_attack[atk_id][j])
+
+        if string_reaction1 == '，该攻击产生':
+            string_reaction1 = ''
+        if string_reaction2 == '，受到由该攻击触发的':
+            string_reaction2 = ''
+        string = '受到%s攻击%d次，其中%d次上元素%s%s。' % (self.monitor.atk_set[atk_id].name, self.stat_attack[atk_id][0], self.stat_attack[atk_id][1], string_reaction1, string_reaction2)
         return string
 
     def burning(self):
@@ -185,7 +195,7 @@ class Target:
         if self.burning_cd == 0:
             self.burning_cd = 0.25 - 0.001
             self.monitor.log_burning("%s燃烧，由%s触发。" % (self.name, self.burning_source.name))
-            self.monitor.attack_list.append(attack.Attack('燃烧', '火', -1, target=self.tgt_id, id=self.burning_source.id))
+            self.monitor.attack_list.append(attack.Attack('燃烧', '火', element_mass=-1, target=self.tgt_id, id=self.burning_source.id, tag='剧变'))
             if self.burning_fire_cd == 0:
                 self.burning_fire_cd = 2 - 0.001
                 if self.element[1] < 0.8:  # 如果火<0.8，则挂火并刷新衰减速度

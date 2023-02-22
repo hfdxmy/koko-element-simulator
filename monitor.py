@@ -2,7 +2,7 @@ from attack import Attack
 import dendro_core
 import target
 import numpy as np
-from const import ELEMENT_REACTION_DICT_REV, decrease_speed
+from const import ELEMENT_REACTION_DICT_REV, decrease_speed, swirl_element_mass
 
 
 class Monitor:
@@ -27,9 +27,9 @@ class Monitor:
         self.steps = int(bs.max_time / self.dt)
         self.attack_list: list[Attack] = []
         if self.single_target:
-            self.target_list = [target.Target(self, i+1) for i in range(1)]
+            self.target_list = [target.Target(self, i) for i in range(1)]
         else:
-            self.target_list = [target.Target(self, i+1) for i in range(2)]
+            self.target_list = [target.Target(self, i) for i in range(2)]
 
     def simulate(self):
         for tgt in self.target_list:
@@ -79,7 +79,8 @@ class Monitor:
     def process_attack(self):
         while len(self.attack_list) > 0:
             atk = self.attack_list.pop(0)
-            atk_elem = atk.element_mass
+            atk_elem = atk.element_mass  # 暂存一下，后续atk.element_mass会变
+
             # 对atk的每个tgt id判断一次
             tgt_list = [0]
             if atk.target == 1:
@@ -93,33 +94,31 @@ class Monitor:
                 tgt = self.target_list[tgt_id]
                 atk.element_mass = atk_elem
 
-                if atk.element_mass == -1:  # 元素反应的元素量都是-1
+                if atk.tag == '剧变':  # 剧变额外攻击记录
                     tgt.stat_attack[atk.id][ELEMENT_REACTION_DICT_REV[atk.name]] += 1
 
-                # 岩击碎冰
+                # 岩击碎冰，目前没有剧变可以造成岩攻击，可以先放着
                 if atk.element == '岩' and tgt.element[5] > 0:
                     tgt.element[5] = 0
                     self.log_action("%s使得%s碎冰，%s" % (atk.name, tgt.name, self.target_list[0].log_element_change()))
-                    self.attack_list.append(Attack('碎冰', id=atk.id, target=tgt_id))
+                    self.attack_list.append(Attack('碎冰', id=atk.id, target=tgt_id, tag='剧变'))
                     tgt.coordinate('nahida')  # 碎冰可以触发草神吗？
 
                 if atk.element_mass > 0:
                     # 如果带元素
-                    tgt.stat_attack[atk.id][1] += 1  # 记录一次元素攻击
                     self.reaction(tgt, atk)
+                    if atk.tag == '角色':
+                        tgt.stat_attack[atk.id][1] += 1  # 记录一次元素攻击
 
-                if atk.element_mass > -1:
-                    tgt.stat_attack[atk.id][0] += 1  # 记录一次攻击
-                    # 判断雷神协同
+                if atk.tag == '角色':
                     tgt.coordinate('shogun')
+                    tgt.stat_attack[atk.id][0] += 1  # 记录一次攻击
                     # 超烈绽放
                     if atk.element == '火' or atk.element == '雷':
                         self.dcm.core_reaction(self.target_list[0], atk)
-                    # 反应的元素量都是-1，不会触发雷神协同和绽放
 
-                if atk.element_mass > -2:
-                    # 阿贝多受击协同
-                    tgt.coordinate('albedo')
+                # 所有类型伤害都能触发的阿贝多受击协同
+                tgt.coordinate('albedo')
             pass  # for t in tgt_list
         pass
 
@@ -166,7 +165,7 @@ class Monitor:
                     if tgt.electro_charged_cd == 0:
                         self.log_action("%s特殊感电，由%s触发。" % (tgt.name, atk.name))
                         # tgt.stat_attack[atk.id][6] += 1
-                        self.attack_list.append(Attack('感电', '雷', -1, id=atk.id))
+                        self.attack_list.append(Attack('感电', '雷', id=atk.id, tag='剧变'))
                         tgt.electro_charged_cd = 1
 
             elif tgt.element[0] > 0:  # 目标有水附着
@@ -227,8 +226,8 @@ class Monitor:
             if reaction_flag:
                 tgt.coordinate('nahida')
 
-        elif atk.element == 3:  # 风
-            pass
+        elif atk.element == '风':  # 风
+            self.reaction_swirl(tgt, atk)
 
         elif atk.element == '雷':  # 雷
             quicken_flag = False
@@ -479,7 +478,7 @@ class Monitor:
             tgt.element[3] = max(0, tgt.element[3] - atk.element_mass)
 
         atk.element_mass -= quant
-        self.attack_list.append(Attack(name='超载', element='火', element_mass=-1, target=2, id=atk.id))
+        self.attack_list.append(Attack(name='超载', element='火', target=2, id=atk.id, tag='剧变'))
         # tgt.stat_attack[atk.id][7] += 1
         self.log_action("%s在%s触发超载，%s" % (atk.name, tgt.name, tgt.log_element_change()))
         if tgt.is_burning and tgt.element[7] == 0:
@@ -505,7 +504,7 @@ class Monitor:
             tgt.element[3] = max(0, tgt.element[3] - atk.element_mass)
 
         atk.element_mass -= quant
-        self.attack_list.append(Attack(name='超导', element='冰', element_mass=-1, target=2, id=atk.id))
+        self.attack_list.append(Attack(name='超导', element='冰', target=2, id=atk.id, tag='剧变'))
         # tgt.stat_attack[atk.id][5] += 1
         self.log_action("%s在%s触发超导，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
@@ -520,3 +519,60 @@ class Monitor:
         tgt.is_burning = True
         self.log_action("%s在%s启动燃烧，%s" % (atk.name, tgt.name, tgt.log_element_change()))
         # tgt.coordinate('nahida')
+
+    def reaction_swirl(self, tgt, atk):
+        reaction_flag = False
+        em = 0
+        if tgt.element[3] > 0:
+            reaction_flag = True
+            em = swirl_element_mass(atk.element_mass, tgt.element[3])
+            quant = min(atk.element_mass, tgt.element[3] * 2)
+            tgt.element[3] = max(0, tgt.element[3] - quant / 2)
+            atk.element_mass -= quant
+            self.attack_list.append(Attack(name='雷扩散', element='雷', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.attack_list.append(Attack(name='雷扩散', element='雷', target=tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.log_action("%s在%s触发雷扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            tgt.coordinate('nahida')
+
+        if tgt.element[1] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            em = swirl_element_mass(atk.element_mass, tgt.element[1])
+            quant = min(atk.element_mass, tgt.element[1] * 2)
+            tgt.element[1] = max(0, tgt.element[1] - quant / 2)
+            atk.element_mass -= quant
+            self.attack_list.append(Attack(name='火扩散', element='火', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.attack_list.append(Attack(name='火扩散', element='火', target=tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.log_action("%s在%s触发火扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        if tgt.element[0] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            em = swirl_element_mass(atk.element_mass, tgt.element[0])
+            quant = min(atk.element_mass, tgt.element[0] * 2)
+            tgt.element[0] = max(0, tgt.element[0] - quant / 2)
+            atk.element_mass -= quant
+            self.attack_list.append(Attack(name='水扩散', element='水', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.attack_list.append(Attack(name='水扩散', element='水', target=tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.log_action("%s在%s触发水扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        if tgt.element[2] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            em = swirl_element_mass(atk.element_mass, tgt.element[2])
+            quant = min(atk.element_mass, tgt.element[2] * 2)
+            tgt.element[2] = max(0, tgt.element[2] - quant / 2)
+            atk.element_mass -= quant
+            self.attack_list.append(Attack(name='冰扩散', element='冰', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.attack_list.append(Attack(name='冰扩散', element='冰', target=tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.log_action("%s在%s触发冰扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        if tgt.element[5] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            em = swirl_element_mass(atk.element_mass, tgt.element[5])
+            quant = min(atk.element_mass, tgt.element[5] * 2)
+            tgt.element[5] = max(0, tgt.element[5] - quant / 2)
+            atk.element_mass -= quant
+            self.attack_list.append(Attack(name='冻扩散', element='冰', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.attack_list.append(Attack(name='冻扩散', element='冰', target=tgt.tgt_id, id=atk.id, tag='剧变'))
+            self.log_action("%s在%s触发冻扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        if reaction_flag:
+            tgt.coordinate('nahida')
