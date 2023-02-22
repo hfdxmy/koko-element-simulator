@@ -45,8 +45,7 @@ class MainFrame(wx.Frame):
         self.SetStatusText("就绪")
 
         self.panel = wx.Panel(self)
-
-        self.log_place = wx.StaticText(self.panel, label='----等待模拟----')
+        self.log_place = wx.TextCtrl(self.panel, value='----等待模拟----', style=wx.TE_READONLY | wx.TE_MULTILINE | wx.HSCROLL | wx.EXPAND | wx.ALL)
 
         self.runButton = wx.Button(self.panel, label="模拟")
         self.runButton.Bind(wx.EVT_BUTTON, self.start_simulation)
@@ -69,7 +68,7 @@ class MainFrame(wx.Frame):
 
         # .2 init setting title
         self.bs_setting_title = wx.BoxSizer()
-        for i in range(0, 11):
+        for i in range(0, 11 ):
             self.bs_setting_title.Add(wx.StaticText(self.panel, style=wx.ALIGN_CENTER, label=SETTING_TITLE[i]),
                                       proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
 

@@ -69,10 +69,13 @@ class Monitor:
 
             # time advance
             self.time += self.dt
-        self.log_basic('---结果统计---\n')
-        self.log_basic(self.target_list[0].stat())
+
+        self.log_basic('---模拟日志---\n', prev=True)
         if not self.single_target:
-            self.log_basic(self.target_list[1].stat())
+            self.log_basic(self.target_list[1].stat(), prev=True)
+        self.log_basic(self.target_list[0].stat(), prev=True)
+        self.log_basic('---结果统计---\n', prev=True)
+
         self.log_place.SetLabel(self.log)
         pass
 
@@ -126,9 +129,12 @@ class Monitor:
         t = np.linspace(0, self.max_time, self.steps + 1)
         self.target_list[0].print_element_hist(canvas, t)
 
-    def log_basic(self, info):
+    def log_basic(self, info, prev=False):
         # self.log_place.SetLabel(self.log_place.GetLabel()+info)
-        self.log += info
+        if prev:
+            self.log = info + self.log
+        else:
+            self.log += info
 
     def log_action(self, info):
         self.log_basic("(%.2fs)%s\n" % (self.time, info))
@@ -342,39 +348,7 @@ class Monitor:
             pass
 
         elif atk.element == '岩':  # 岩
-            if tgt.geo_cd > 0:
-                return
-            if tgt.element[3] > 0:  # 结晶
-                tgt.element[3] = max(0, tgt.element[3] - atk.element_mass / 2)
-                tgt.geo_cd = 1
-                tgt.stat_attack[atk.id][22] += 1
-                self.log_action("%s在%s触发雷结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            elif tgt.element[1] > 0:
-                tgt.element[1] = max(0, tgt.element[1] - atk.element_mass / 2)
-                tgt.geo_cd = 1
-                tgt.stat_attack[atk.id][21] += 1
-                self.log_action("%s在%s触发火结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            elif tgt.element[0] > 0:
-                tgt.element[0] = max(0, tgt.element[0] - atk.element_mass / 2)
-                tgt.geo_cd = 1
-                tgt.stat_attack[atk.id][20] += 1
-                self.log_action("%s在%s触发水结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            elif tgt.element[2] > 0:
-                tgt.element[2] = max(0, tgt.element[2] - atk.element_mass / 2)
-                tgt.geo_cd = 1
-                tgt.stat_attack[atk.id][23] += 1
-                self.log_action("%s在%s触发冰结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            elif tgt.element[5] > 0:
-                tgt.element[5] = max(0, tgt.element[5] - atk.element_mass / 2)
-                tgt.geo_cd = 1
-                tgt.stat_attack[atk.id][24] += 1
-                self.log_action("%s在%s触发冻结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            else:
-                reaction_flag = False
-
-            if reaction_flag:
-                tgt.coordinate('nahida')
-            pass
+            self.reaction_crystallize(tgt, atk)
 
     def reaction_froze(self, tgt, atk):
         quant = 0
@@ -532,7 +506,6 @@ class Monitor:
             self.attack_list.append(Attack(name='雷扩散', element='雷', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
             self.attack_list.append(Attack(name='雷扩散', element='雷', target=tgt.tgt_id, id=atk.id, tag='剧变'))
             self.log_action("%s在%s触发雷扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
-            tgt.coordinate('nahida')
 
         if (tgt.element[1] > 0 or tgt.element[7] > 0) and atk.element_mass > 0.01:
             reaction_flag = True
@@ -579,4 +552,57 @@ class Monitor:
             self.log_action("%s在%s触发冻扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
 
         if reaction_flag:
+            tgt.coordinate('nahida')
+
+    def reaction_crystallize(self, tgt, atk):
+        reaction_flag = False
+        if tgt.geo_cd > 0:
+            return
+
+        if tgt.element[3] > 0:
+            reaction_flag = True
+            quant = min(atk.element_mass, tgt.element[3] * 2)
+            tgt.element[3] = max(0, tgt.element[3] - quant / 2)
+            atk.element_mass -= quant
+            tgt.stat_attack[atk.id][23] += 1
+            self.log_action("%s在%s触发雷结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        elif (tgt.element[1] > 0 or tgt.element[7] > 0) and atk.element_mass > 0.01:
+            reaction_flag = True
+            major = max(tgt.element[1], tgt.element[7])
+            quant = min(atk.element_mass, major * 2)
+            tgt.element[1] = max(0, tgt.element[1] - quant / 2)
+            tgt.element[7] = max(0, tgt.element[7] - quant / 2)
+            atk.element_mass -= quant
+            tgt.stat_attack[atk.id][22] += 1
+            self.log_action("%s在%s触发火结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            if tgt.is_burning and tgt.element[7] == 0:
+                tgt.burning_finalize()
+
+        elif tgt.element[0] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            quant = min(atk.element_mass, tgt.element[0] * 2)
+            tgt.element[0] = max(0, tgt.element[0] - quant / 2)
+            atk.element_mass -= quant
+            tgt.stat_attack[atk.id][21] += 1
+            self.log_action("%s在%s触发水结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        elif tgt.element[2] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            quant = min(atk.element_mass, tgt.element[2] * 2)
+            tgt.element[2] = max(0, tgt.element[2] - quant / 2)
+            atk.element_mass -= quant
+            tgt.stat_attack[atk.id][24] += 1
+            self.log_action("%s在%s触发冰结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        elif tgt.element[5] > 0 and atk.element_mass > 0.01:
+            reaction_flag = True
+            quant = min(atk.element_mass, tgt.element[5] * 2)
+            tgt.element[5] = max(0, tgt.element[5] - quant / 2)
+            atk.element_mass -= quant
+            tgt.stat_attack[atk.id][25] += 1
+            self.log_action("%s在%s触发冻结晶，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+
+        if reaction_flag:
+            tgt.geo_cd = 1
             tgt.coordinate('nahida')
