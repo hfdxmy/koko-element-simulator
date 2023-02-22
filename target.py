@@ -195,14 +195,12 @@ class Target:
         if self.burning_cd == 0:
             self.burning_cd = 0.25 - 0.001
             self.monitor.log_burning("%s燃烧，由%s触发。" % (self.name, self.burning_source.name))
-            self.monitor.attack_list.append(attack.Attack('燃烧', '火', element_mass=-1, target=self.tgt_id, id=self.burning_source.id, tag='剧变'))
+            em = 0
             if self.burning_fire_cd == 0:
                 self.burning_fire_cd = 2 - 0.001
-                if self.element[1] < 0.8:  # 如果火<0.8，则挂火并刷新衰减速度
-                    self.element[1] = 0.8
-                    self.decrease_spd[1] = decrease_speed('火', 0.8)
-                    self.monitor.log_action("%s燃烧上火，%s" % (self.name, self.log_element_change()))
-            pass
+                em = 1
+            self.monitor.attack_list.append(attack.Attack('燃烧', '火', element_mass=em, target=self.tgt_id, id=self.burning_source.id, tag='剧变'))
+
             self.coordinate('nahida')
 
     def burning_finalize(self):

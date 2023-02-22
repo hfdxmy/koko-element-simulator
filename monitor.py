@@ -534,15 +534,19 @@ class Monitor:
             self.log_action("%s在%s触发雷扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
             tgt.coordinate('nahida')
 
-        if tgt.element[1] > 0 and atk.element_mass > 0.01:
+        if (tgt.element[1] > 0 or tgt.element[7] > 0) and atk.element_mass > 0.01:
             reaction_flag = True
-            em = swirl_element_mass(atk.element_mass, tgt.element[1])
-            quant = min(atk.element_mass, tgt.element[1] * 2)
+            major = max(tgt.element[1], tgt.element[7])
+            em = swirl_element_mass(atk.element_mass, major)
+            quant = min(atk.element_mass, major * 2)
             tgt.element[1] = max(0, tgt.element[1] - quant / 2)
+            tgt.element[7] = max(0, tgt.element[7] - quant / 2)
             atk.element_mass -= quant
             self.attack_list.append(Attack(name='火扩散', element='火', element_mass=em, target=1-tgt.tgt_id, id=atk.id, tag='剧变'))
             self.attack_list.append(Attack(name='火扩散', element='火', target=tgt.tgt_id, id=atk.id, tag='剧变'))
             self.log_action("%s在%s触发火扩散，%s" % (atk.name, tgt.name, tgt.log_element_change()))
+            if tgt.is_burning and tgt.element[7] == 0:
+                tgt.burning_finalize()
 
         if tgt.element[0] > 0 and atk.element_mass > 0.01:
             reaction_flag = True
