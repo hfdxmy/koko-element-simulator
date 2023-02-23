@@ -1,34 +1,40 @@
 import wx
 
+class MyFrame(wx.Frame):
+    def __init__(self, parent):
+        wx.Frame.__init__(self, parent, title="SplitterWindow Example")
 
-class Example(wx.Frame):
+        # 创建SplitterWindow
+        splitter = wx.SplitterWindow(self)
 
-    def __init__(self, parent, title):
-        super(Example, self).__init__(parent, title=title, size=(300, 200))
+        # 创建左侧面板和右侧面板
+        panel1 = wx.Panel(splitter)
+        panel2 = wx.Panel(splitter)
 
-        self.InitUI()
+        # 在左侧面板中添加一个文本控件
+        text1 = wx.StaticText(panel1, label="This is panel 1")
+        vbox1 = wx.BoxSizer(wx.VERTICAL)
+        vbox1.Add(text1, 0, wx.ALL, 5)
+        panel1.SetSizer(vbox1)
 
-    def InitUI(self):
-        pnl = wx.Panel(self)
+        # 在右侧面板中添加一个文本控件
+        text2 = wx.StaticText(panel2, label="This is panel 2")
+        vbox2 = wx.BoxSizer(wx.VERTICAL)
+        vbox2.Add(text2, 0, wx.ALL, 5)
+        panel2.SetSizer(vbox2)
 
-        self.cb1 = wx.CheckBox(pnl, label='Value A', pos=(10, 10))
-        self.cb2 = wx.CheckBox(pnl, label='Value B', pos=(10, 40))
-        self.cb3 = wx.CheckBox(pnl, label='Value C', pos=(10, 70))
+        # 设置SplitterWindow的最小尺寸
+        splitter.SetMinimumPaneSize(20)
 
-        self.Bind(wx.EVT_CHECKBOX, self.onChecked)
-        self.Centre()
-        self.Show(True)
+        # 设置SplitterWindow的左右两个面板
+        splitter.SplitVertically(panel1, panel2)
 
-    def onChecked(self, e):
-        cb = e.GetEventObject()
-        print (cb.GetLabel(), ' is clicked', cb.GetValue())
+        # 将SplitterWindow作为窗口的主面板
+        self.SetSizer(wx.BoxSizer(wx.VERTICAL))
+        self.GetSizer().Add(splitter, 1, wx.EXPAND)
 
-
-# ex = wx.App()
-# Example(None, 'CheckBox Demo - www.yiibai.com')
-# ex.MainLoop()
-a = [1,2,3,4]
-print(a.pop(0))
-print(a.pop(0))
-print(a.pop(0))
-print(a.pop(0))
+if __name__ == "__main__":
+    app = wx.App()
+    frame = MyFrame(None)
+    frame.Show()
+    app.MainLoop()

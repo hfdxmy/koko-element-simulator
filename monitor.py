@@ -3,22 +3,25 @@ import dendro_core
 import target
 import numpy as np
 from const import ELEMENT_REACTION_DICT_REV, decrease_speed, swirl_element_mass
-
+import matplotlib.pyplot as plt
 
 class Monitor:
 
-    def __init__(self, bs, atk_set, log_place):  # bs short for basic setting
+    def __init__(self, main):  # bs short for basic setting
+        bs = main.basic_setting
+        self.atk_set = main.attack_setting
+        self.log_place = main.log_place
+        self.info_place = main.info_place
+
         self.time = 0
         self.dt = bs.dt
         self.max_time = bs.max_time
         self.attack_num = bs.attack_num
-        self.atk_set = atk_set
 
         self.flag_log_apply = bs.log_apply
         self.flag_log_quicken = bs.log_quicken
         self.flag_log_burning = bs.log_burning
         self.log = ''
-        self.log_place = log_place
         self.nilou = bs.nilou
         self.dcm = dendro_core.DCManager(self)
         self.flag_froze = bs.flag_froze
@@ -42,7 +45,7 @@ class Monitor:
                 elif self.atk_set[a].attack_mode == '阿贝多协同':
                     tgt.coordinate_albedo_list.append(a)
 
-        self.log_place.SetLabel('---模拟开始---\n')
+        self.log_basic('---模拟开始---\n')
 
         for _ in range(self.steps):
             # deal with each attack
@@ -125,10 +128,21 @@ class Monitor:
             pass  # for t in tgt_list
         pass
 
-    def plot(self, canvas):
+    def plot(self):
+        fig = plt.gcf() or plt.figure()
+        ax = fig.gca()
+        ax.cla()
         t = np.linspace(0, self.max_time, self.steps + 1)
-        self.target_list[0].print_element_hist(canvas, t)
 
+        self.target_list[0].print_element_hist(t, ax)
+
+        ax.legend(loc='upper right')
+        ax.set_xticks(np.arange(0, self.max_time, 1.0))
+        if self.max_time < 10.01:
+            ax.set_xticks(np.arange(0, self.max_time + 1, 0.5))
+        ax.grid()
+        # self.set_title(self.name_eng)
+        plt.show()
     def log_basic(self, info, prev=False):
         # self.log_place.SetLabel(self.log_place.GetLabel()+info)
         if prev:

@@ -1,7 +1,7 @@
 import attack
-from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT, decrease_speed
+from const import ATTACH_ELEMENT_DICT, ELEMENT_REACTION_DICT
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 class Target:
 
@@ -124,25 +124,28 @@ class Target:
         # print("%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string()))
         return "%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string())
 
-    def print_element_hist(self, canvas, t):
+    def print_element_hist(self, t, ax):
         element_hist = np.array(self.element_hist).transpose()
 
-        ax = canvas.axes
-        ax.cla()
         element_hist_max = [0, 0, 0, 0, 0, 0, 0, 0]
         element_plot_color = {0: "blue", 1: "Red", 2: "lightblue", 3: "mediumpurple", 4: "lightgreen", 5: "deepskyblue", 6: "green", 7: "firebrick"}
         element_plot_name = {0: "Hydro", 1: "Pyro", 2: "Cryo", 3: "Electro", 4: "Dendro", 5: "Frozen", 6: "Quicken", 7: "Burning"}
+        # if canvas is not None:
+        #     ax = canvas.axes
+        #     ax.cla()
+        # else:
+        #     fig, ax = plt.subplots()
+
         for i in range(8):
             element_hist_max[i] = max(element_hist[i])
             if element_hist_max[i] > 0.1:
                 ax.plot(t, element_hist[i], color=element_plot_color[i], label=element_plot_name[i], linewidth=1)
-        ax.legend(loc='upper right')
-        ax.set_xticks(np.arange(0, t[-1]+1, 1.0))
-        if t[-1] < 10.01:
-            ax.set_xticks(np.arange(0, t[-1] + 1, 0.5))
-        ax.grid()
-        ax.set_title(self.name_eng)
-        canvas.canvas.draw()
+
+
+        # if canvas is not None:
+        #     canvas.canvas.draw()
+        # else:
+        #     plt.show()
         # ax.plot(t, element_hist[2], color="purple")
         # plt.show()
 
