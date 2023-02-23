@@ -136,11 +136,18 @@ class Target:
         # else:
         #     fig, ax = plt.subplots()
 
+        ax.cla()
         for i in range(8):
             element_hist_max[i] = max(element_hist[i])
             if element_hist_max[i] > 0.1:
                 ax.plot(t, element_hist[i], color=element_plot_color[i], label=element_plot_name[i], linewidth=1)
 
+        ax.legend(loc='upper right')
+        ax.set_xticks(np.arange(0, t[-1]+1, 1.0))
+        if t[-1] < 10.01:
+            ax.set_xticks(np.arange(0, t[-1] + 1, 0.5))
+        ax.grid()
+        ax.set_title(self.name_eng)
 
         # if canvas is not None:
         #     canvas.canvas.draw()

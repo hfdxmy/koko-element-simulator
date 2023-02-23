@@ -45,7 +45,7 @@ class Monitor:
                 elif self.atk_set[a].attack_mode == '阿贝多协同':
                     tgt.coordinate_albedo_list.append(a)
 
-        self.log_basic('---模拟开始---\n')
+        self.log_basic('---模拟过程---\n')
 
         for _ in range(self.steps):
             # deal with each attack
@@ -129,19 +129,30 @@ class Monitor:
         pass
 
     def plot(self):
-        fig = plt.gcf() or plt.figure()
-        ax = fig.gca()
-        ax.cla()
+        # fig = plt.gcf() or plt.figure()
         t = np.linspace(0, self.max_time, self.steps + 1)
 
-        self.target_list[0].print_element_hist(t, ax)
+        fig_num_list = plt.get_fignums()
+        # 判断是否存在fig对象
+        if fig_num_list:
+            # 如果存在，则获取当前的fig对象
+            fig = plt.figure(fig_num_list[0])
+        else:
+            # 如果不存在，则创建一个新的fig对象
+            fig = plt.figure()
 
-        ax.legend(loc='upper right')
-        ax.set_xticks(np.arange(0, self.max_time, 1.0))
-        if self.max_time < 10.01:
-            ax.set_xticks(np.arange(0, self.max_time + 1, 0.5))
-        ax.grid()
-        # self.set_title(self.name_eng)
+        if self.single_target:
+            ax = plt.subplot()
+            self.target_list[0].print_element_hist(t, ax)
+        else:
+            ax1 = plt.subplot(2, 1, 1)
+            ax2 = plt.subplot(2, 1, 2)
+            self.target_list[0].print_element_hist(t, ax1)
+            self.target_list[1].print_element_hist(t, ax2)
+            plt.subplots_adjust(hspace=0.4)
+
+        # ax = fig.gca()
+
         plt.show()
     def log_basic(self, info, prev=False):
         # self.log_place.SetLabel(self.log_place.GetLabel()+info)
