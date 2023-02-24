@@ -212,7 +212,6 @@ class Target:
                 em = 1
             self.monitor.attack_list.append(attack.Attack('燃烧', '火', element_mass=em, target=self.tgt_id, id=self.burning_source.id, tag='剧变'))
 
-            self.coordinate('nahida')
 
     def burning_finalize(self):
         self.decrease_spd[4] = self.decrease_spd[8]

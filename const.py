@@ -14,7 +14,7 @@ ELEMENT_REACTION_DICT_REV = {'蒸发': 2, '冻结': 3, '融化': 4, '超导': 5,
                              '超绽放': 19,
                              '燃烧': 20, '水结晶': 21, '火结晶': 22, '雷结晶': 23, '冰结晶': 24, '冻结晶': 25,
                              '碎冰': 26}
-VERSION = 0.9
+VERSION = 0.91
 SETTING_VERSION = 1
 ACCEPTABLE_SETTING_VERSION = [1]
 APP_TITLE = 'KOKO元素反应模拟器V' + str(VERSION)

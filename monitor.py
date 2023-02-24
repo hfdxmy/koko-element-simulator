@@ -130,8 +130,8 @@ class Monitor:
                     if atk.element == '火' or atk.element == '雷':
                         self.dcm.core_reaction(self.target_list[0], atk)
 
-                # 除了感电都能触发雷神协同
-                if atk.name != '感电':
+                # 除了感电和燃烧都能触发雷神协同
+                if atk.name != '感电' and atk.name != '燃烧':
                     tgt.coordinate('shogun')
 
                 # 所有类型伤害都能触发的阿贝多受击协同

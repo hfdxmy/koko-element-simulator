@@ -223,6 +223,7 @@ class MainFrame(wx.Frame):
         exit_item = wx.MenuItem(file_menu, wx.ID_ANY, text="退出", helpString="", kind=wx.ITEM_NORMAL)
         help_item = wx.MenuItem(help_menu, wx.ID_ANY, text="帮助", helpString="", kind=wx.ITEM_NORMAL)
         tip_item = wx.MenuItem(help_menu, wx.ID_ANY, text="提示", helpString="", kind=wx.ITEM_NORMAL)
+        update_item = wx.MenuItem(help_menu, wx.ID_ANY, text="更新记录", helpString="", kind=wx.ITEM_NORMAL)
         about_item = wx.MenuItem(help_menu, wx.ID_ANY, text="关于", helpString="", kind=wx.ITEM_NORMAL)
         link_names = ["高等元素论 by Shallow夢", "高等元素论（草反应） by 佳佳妹妹。", "反应优先级 by tesiacoil", '元素附着论 by tesiacoil', '冻结反应机制 by Shallow夢', '项目Github']
         link_addresses = ['https://bbs.nga.cn/read.php?tid=24400590',
@@ -238,6 +239,7 @@ class MainFrame(wx.Frame):
         file_menu.Append(exit_item)
         help_menu.Append(help_item)
         help_menu.Append(tip_item)
+        help_menu.Append(update_item)
         help_menu.Append(about_item)
 
         for item in link_items:
@@ -255,6 +257,7 @@ class MainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
         self.Bind(wx.EVT_MENU, self.on_help, help_item)
         self.Bind(wx.EVT_MENU, self.on_tip, tip_item)
+        self.Bind(wx.EVT_MENU, self.on_update, update_item)
         self.Bind(wx.EVT_MENU, self.on_about, about_item)
 
         link_funcs = [lambda event, i=i: wx.LaunchDefaultBrowser(link_addresses[i]) for i in range(len(link_items))]
@@ -276,6 +279,14 @@ class MainFrame(wx.Frame):
         wx.MessageBox(APP_TITLE+"，仅供研究学习使用。\n NGA@kokobird，2023年2月",
                       "关于",
                       wx.OK | wx.ICON_INFORMATION)
+    def on_update(self, event):
+        wx.MessageBox("V0.91:\n"
+                      "-修复燃烧持续伤害会触发草神协同和雷神协同的bug。\n"
+                      "-添加更新记录。\n"
+                      "V0.90:\n"
+                      "-首次发布。",
+                      "更新记录",
+                      wx.OK | wx.ICON_INFORMATION)
 
     def on_help(self, event):
         wx.MessageBox(""
@@ -285,7 +296,7 @@ class MainFrame(wx.Frame):
                       "“忽略目标2”生效时，所有计算均为单目标。”记录附着“等生效时，日志将输出相应信息。\n"
                       "2. 对于每条技能，”启用“关闭时则不进行计算。”名称”可自定义。“元素量”不超过4。"
                       "”起始时间“和”冷却时间“表示生效时间段。”攻击冷却“表示至少经过多少时间才能触发一次攻击，不小于0.5秒。”附着冷却“表示至少经过多少时间，下一次攻击才能上元素。\n"
-                      "3. “攻击方式”中，“定时触发”表示冷却时间一到就产生一次攻击，”草神协同“表示目标触发元素反应或受到草原核伤害后触发，”雷神协同“表示目标受到除感电以外的攻击后触发，"
+                      "3. “攻击方式”中，“定时触发”表示冷却时间一到就产生一次攻击，”草神协同“表示目标触发元素反应或受到草原核伤害后触发，”雷神协同“表示目标受到除感电、燃烧以外的攻击后触发，"
                       "”阿贝多协同“表示目标受到任何伤害后触发。名称仅代表触发形式，不要求具体角色。\n"
                       "\n"
                       "特殊处理：\n"
