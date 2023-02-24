@@ -73,7 +73,6 @@ class Monitor:
             # time advance
             self.time += self.dt
 
-        self.log_basic('---模拟日志---\n', prev=True)
         if not self.single_target:
             self.log_basic(self.target_list[1].stat(), prev=True)
         self.log_basic(self.target_list[0].stat(), prev=True)

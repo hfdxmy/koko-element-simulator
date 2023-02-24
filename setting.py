@@ -1,16 +1,17 @@
 import wx
 from validator import NumberValidator
-from const import ELEMENTS, BASIC_ELEMENT_DICT
+from const import ELEMENTS
+from main import MyException
 from attack import Attack
 import random as rand
 
 
 class AttackSetting:
 
-    def __init__(self, parent, num, log_place, sizer):
-        self.log_place = log_place
+    def __init__(self, parent, num, sizer, logger):
+        self.logger = logger
         # self.bs = wx.BoxSizer()
-        self.input_is_active = wx.CheckBox(parent, label='启用')  # 启用
+        self.input_is_active = wx.CheckBox(parent, style=wx.ALIGN_RIGHT)  # 启用
         self.input_name = wx.TextCtrl(parent, size=(60, 20))  # 名称
         self.input_element = wx.Choice(parent, choices=ELEMENTS)  # 元素
         self.input_element_mass = wx.TextCtrl(parent, validator=NumberValidator(), size=(30, 20))  # 元素量
@@ -34,12 +35,10 @@ class AttackSetting:
         sizer.Add(self.input_element_cd, proportion=0, flag=wx.EXPAND | wx.ALL, border=5)  # 附着冷却
 
         # default value
-        if num < 3:
+        if num < 4:
             self.input_is_active.SetValue(True)
-        else:
-            self.input_is_active.SetValue(False)
-        self.input_name.SetValue('技能')
-        self.input_element.SetSelection(0)
+        self.input_element.SetSelection((num-1) % 7)
+        self.input_name.SetValue(ELEMENTS[num-1])
         self.input_element_mass.SetValue('1')
         self.input_attack_mode.SetSelection(0)
         self.input_attack_target.SetSelection(0)
@@ -130,7 +129,7 @@ class AttackSetting:
         return True
 
     def error_log(self, info):
-        self.log_place.SetLabel('第%d条设置：“%s” %s' % (self.setting_id, self.name, info))
+        self.logger.log_basic('第%d条设置：“%s” %s' % (self.setting_id, self.name, info))
 
     def remove(self):
         pass
@@ -167,7 +166,7 @@ class AttackSetting:
 
 class BasicSetting:
 
-    def __init__(self, parent, log_place, sizer):
+    def __init__(self, parent, sizer, logger):
         self.input_max_time = wx.TextCtrl(parent, validator=NumberValidator(), size=(30, 24))
         self.input_max_time.SetValue('20')
         self.input_dt = wx.Choice(parent, choices=['0.25', '0.2', '0.1', '0.05', '0.02', '0.01'])
@@ -179,39 +178,44 @@ class BasicSetting:
         self.input_log_apply = wx.CheckBox(parent, label='记录附着')
         self.input_log_quicken = wx.CheckBox(parent, label='记录激化')
         self.input_log_burning = wx.CheckBox(parent, label='记录燃烧')
+        self.input_auto_plot = wx.CheckBox(parent, label='自动绘图')
+        self.input_auto_plot.SetValue(True)
 
-        sizer.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="模拟时长(s)："),flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label=" 模拟时长(s)"), flag=wx.ALIGN_CENTER_VERTICAL, border=5)
         sizer.Add(self.input_max_time, flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="精度(s)："), flag=wx.EXPAND | wx.ALL, border=5)
+        sizer.Add(wx.StaticText(parent, style=wx.ALIGN_LEFT, label="精度(s)"), flag=wx.ALIGN_CENTER_VERTICAL, border=5)
         sizer.Add(self.input_dt, flag=wx.EXPAND | wx.ALL, border=5)
-        sizer.Add(self.input_nilou)
-        sizer.Add(self.input_flag_froze)
-        sizer.Add(self.input_single_target)
-        sizer.Add(self.input_log_apply)
-        sizer.Add(self.input_log_quicken)
-        sizer.Add(self.input_log_burning)
+        sizer.Add(self.input_nilou, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_flag_froze, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_single_target, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_log_apply, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_log_quicken, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_log_burning, flag=wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(self.input_auto_plot, flag=wx.ALIGN_CENTER_VERTICAL)
 
         self.max_time = 0
         self.dt = 0.02
         self.attack_num = 1
         self.dt_choice = 0
-        self.log_place = log_place
         self.log_apply = True
         self.log_quicken = True
         self.log_burning = False
         self.nilou = False
         self.flag_froze = True
         self.single_target = True
+        self.auto_plot = True
+
+        self.logger = logger
 
     def get_inputs(self):
         try:
             max_time = float(self.input_max_time.GetValue())
 
         except ValueError:
-            self.log_place.SetLabel('模拟时长错误。')
+            self.logger.log_basic('模拟时长错误。')
             return False
         if max_time > 40:
-            self.log_place.SetLabel('模拟时长太长。')
+            self.logger.log_basic('模拟时长太长。')
             return False
 
         self.max_time = max_time
@@ -223,11 +227,12 @@ class BasicSetting:
         self.nilou = self.input_nilou.GetValue()
         self.flag_froze = not (self.input_flag_froze.GetValue())
         self.single_target = self.input_single_target.GetValue()
+        self.auto_plot = self.input_auto_plot.GetValue()
         return True
 
     def set_inputs(self, array):
         attr_list = ["max_time", "dt_choice", "log_apply", "log_quicken",
-                     "log_burning", "nilou", "flag_froze", "single_target"]
+                     "log_burning", "nilou", "flag_froze", "single_target", "auto_plot"]
         try:
             for i in range(len(attr_list)):
                 setattr(self, attr_list[i], array[i])
@@ -240,6 +245,7 @@ class BasicSetting:
             self.input_nilou.SetValue(self.nilou)
             self.input_flag_froze.SetValue(not self.flag_froze)
             self.input_single_target.SetValue(self.single_target)
+            self.input_auto_plot.SetValue(self.auto_plot)
         except:
             return False
         return True
@@ -247,4 +253,4 @@ class BasicSetting:
     def get_string(self):
         self.get_inputs()
         return [getattr(self, attr) for attr in ["max_time", "dt_choice", "log_apply", "log_quicken",
-                                                 "log_burning", "nilou", "flag_froze", "single_target"]]
+                                                 "log_burning", "nilou", "flag_froze", "single_target", "auto_plot"]]
