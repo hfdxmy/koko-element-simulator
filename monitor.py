@@ -35,6 +35,14 @@ class Monitor:
             self.target_list = [target.Target(self, i) for i in range(2)]
 
     def simulate(self):
+        sim_flag = False
+        for atk_s in self.atk_set:
+            if atk_s.is_active:
+                sim_flag = True
+                break
+        if not sim_flag:
+            return False
+
         for tgt in self.target_list:
             for a in range(self.attack_num):
                 tgt.stat_attack.append([0 for _ in range(27)])
@@ -79,7 +87,8 @@ class Monitor:
         self.log_basic('---结果统计---\n', prev=True)
 
         self.log_place.SetLabel(self.log)
-        pass
+
+        return True
 
     def process_attack(self):
         while len(self.attack_list) > 0:

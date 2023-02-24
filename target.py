@@ -63,7 +63,7 @@ class Target:
             if self.is_frozen:
                 self.is_frozen = False
                 self.stat_frozen.append([self.frozen_time, self.monitor.time])
-                self.monitor.log_action("%s解冻" % self.name)
+                self.monitor.log_action("%s解冻，冻结时长%.2f秒" % (self.name, self.monitor.time-self.frozen_time))
 
         # 感电CD
         self.electro_charge()
@@ -117,7 +117,7 @@ class Target:
         self.electro_charged_cd = 1  # 感电冷却1秒
         # self.stat_attack[self.electro_charged_source.id][6] += 1
         self.monitor.log_action("%s感电，由%s触发。" % (self.name, self.electro_charged_source.name))
-        self.monitor.attack_list.append(attack.Attack('感电', '雷', target=self.tgt_id, id=self.electro_charged_source.id))
+        self.monitor.attack_list.append(attack.Attack('感电', '雷', target=self.tgt_id, id=self.electro_charged_source.id, tag='剧变'))
         self.coordinate('nahida')
 
     def log_element_change(self):

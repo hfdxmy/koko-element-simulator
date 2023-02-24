@@ -14,7 +14,7 @@ ELEMENT_REACTION_DICT_REV = {'蒸发': 2, '冻结': 3, '融化': 4, '超导': 5,
 VERSION = 0.9
 SETTING_VERSION = 1
 ACCEPTABLE_SETTING_VERSION = [1]
-APP_TITLE = '原神元素反应模拟器V' + str(VERSION)
+APP_TITLE = 'KOKO元素反应模拟器V' + str(VERSION)
 
 def decrease_speed(element, element_mass):
     spd = 0

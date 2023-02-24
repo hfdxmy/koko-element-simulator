@@ -12,7 +12,7 @@ class AttackSetting:
         self.logger = logger
         # self.bs = wx.BoxSizer()
         self.input_is_active = wx.CheckBox(parent, style=wx.ALIGN_RIGHT)  # 启用
-        self.input_name = wx.TextCtrl(parent, size=(60, 20))  # 名称
+        self.input_name = wx.TextCtrl(parent, size=(80, 20))  # 名称
         self.input_element = wx.Choice(parent, choices=ELEMENTS)  # 元素
         self.input_element_mass = wx.TextCtrl(parent, validator=NumberValidator(), size=(30, 20))  # 元素量
         self.input_attack_mode = wx.Choice(parent, choices=['定时触发', '草神协同', '雷神协同', '阿贝多协同'])  # 攻击方式
@@ -38,7 +38,7 @@ class AttackSetting:
         if num < 4:
             self.input_is_active.SetValue(True)
         self.input_element.SetSelection((num-1) % 7)
-        self.input_name.SetValue(ELEMENTS[num-1])
+        self.input_name.SetValue(ELEMENTS[(num-1) % 7])
         self.input_element_mass.SetValue('1')
         self.input_attack_mode.SetSelection(0)
         self.input_attack_target.SetSelection(0)

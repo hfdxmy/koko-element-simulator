@@ -50,7 +50,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self, None, -1, title=APP_TITLE)
 
         self.SetBackgroundColour(wx.Colour(224, 224, 224))
-        self.SetSize((1200, 600))
+        self.SetSize((1400, 600))
         self.Center()
         self.make_menu_bar()
         # self.CreateStatusBar()
@@ -111,7 +111,7 @@ class MainFrame(wx.Frame):
 
         panel_info.SetSizer(bs_info)
         splitter.SplitVertically(self.panel_setting, panel_info)
-        splitter.SetMinimumPaneSize(770)
+        splitter.SetMinimumPaneSize(800)
         self.SetSizer(wx.BoxSizer(wx.VERTICAL))
         self.GetSizer().Add(splitter, 1, wx.EXPAND)
 
@@ -131,11 +131,13 @@ class MainFrame(wx.Frame):
                 return False
 
         self.m = monitor.Monitor(self)
-        self.m.simulate()
-        self.info_logger.log_basic("模拟完成！")
-        self.flag_simulation = True
-        if self.basic_setting.auto_plot:
-            self.m.plot()
+        if self.m.simulate():
+            self.info_logger.log_basic("模拟完成！")
+            self.flag_simulation = True
+            if self.basic_setting.auto_plot:
+                self.m.plot()
+        else:
+            self.info_logger.log_basic("未进行模拟！")
 
     def init_buttons(self, sizer, parent):
         # Buttons
@@ -151,7 +153,7 @@ class MainFrame(wx.Frame):
         saveSetButton.Bind(wx.EVT_BUTTON, self.on_copy_setting)
         presetButton = wx.Button(parent, label="加载预设")
         presetButton.Bind(wx.EVT_BUTTON, self.on_preset_select)
-        randomButton = wx.Button(parent, label="随机冷却\n起始时间")
+        randomButton = wx.Button(parent, label="随机\n起始时刻")
         randomButton.Bind(wx.EVT_BUTTON, self.on_random)
         saveButton = wx.Button(parent, label="保存结果")
         saveButton.Bind(wx.EVT_BUTTON, self.on_save)
@@ -181,8 +183,11 @@ class MainFrame(wx.Frame):
                     self.add_setting(self.panel_setting, self.gs_atk_set)
                 self.bs_setting.Layout()
 
-            for i in range(len(sets)):
-                self.attack_setting[i].set_inputs(sets[i])
+            for i in range(len(self.attack_setting)):
+                if i > len(sets) - 1:
+                    self.attack_setting[i].input_is_active.SetValue(False)
+                else:
+                    self.attack_setting[i].set_inputs(sets[i])
         except VersionException as e:
             self.info_logger.log_basic(str(e))
             return False
@@ -257,10 +262,35 @@ class MainFrame(wx.Frame):
 
 
     def on_preset_select(self, event):
-        dlg = wx.SingleChoiceDialog(self, "请选择预设", "加载预设", ["选项1", "选项2", "选项3", "选项4", "选项5", "选项6"])
+        dlg = wx.SingleChoiceDialog(self, "请选择预设", "加载预设", ["水火雷草冰反应炉", "胡桃+夜兰/行秋", "水冰冻结", "感电与扩散", "激化与冻结护草", "草行久+水草雷前台", "心雷妲+水冰后台", "心妮妲+草", "燃草+水冰雷前台", "重置"])
         if dlg.ShowModal() == wx.ID_OK:
             selection = dlg.GetStringSelection()
-            print("你选择了：" + selection)
+            if selection == '水火雷草冰反应炉':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u6c34", 0, 1.0, 0, 0, 1.5, 15.0, 1.3, 0.0], [true, "\u706b", 1, 1.0, 0, 0, 2.1, 15.0, 1.5, 0.0], [true, "\u96f7", 2, 1.0, 0, 0, 0.9, 15.0, 1.1, 0.0], [true, "\u8349", 3, 1.0, 0, 0, 1.3, 15.0, 1.7, 0.0], [true, "\u51b0", 4, 1.0, 0, 0, 0.8, 15.0, 1.9, 0.0]]'
+            elif selection == '重置':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u6c34", 0, 1.0, 0, 0, 1.9, 15.0, 1.2, 0.0], [true, "\u706b", 1, 1.0, 0, 0, 2.6, 15.0, 1.8, 0.0], [true, "\u96f7", 2, 1.0, 0, 0, 2.1, 15.0, 1.5, 0.0], [false, "\u8349", 3, 1.0, 0, 0, 3.0, 15.0, 1.3, 0.0], [false, "\u51b0", 4, 1.0, 0, 0, 0.7, 15.0, 1.8, 0.0]]'
+            elif selection == '胡桃+夜兰/行秋':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u591c\u5170\u6c34\u7bad", 0, 1.0, 0, 0, 0.3, 15.0, 1.0, 0.0], [true, "\u80e1\u6843A", 1, 1.0, 0, 0, 2.0, 9.0, 1.0, 2.5], [true, "\u80e1\u6843\u91cd", 1, 1.0, 0, 0, 2.1, 9.0, 1.0, 0.0], [false, "\u8840\u6885\u9999", 1, 1.0, 0, 0, 2.2, 12.0, 4.0, 0.0], [false, "\u591c\u51702\u547d", 0, 1.0, 0, 0, 0.3, 15.0, 2.0, 0.0], [false, "\u884c\u79cb\u6c34\u7bad1", 0, 1.0, 0, 0, 0.3, 18.0, 1.0, 0.0], [false, "\u884c\u79cb\u6c34\u7bad2", 0, 1.0, 0, 0, 3.3, 15.0, 3.0, 0.0]]'
+            elif selection == '水冰冻结':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "2s1\u6c34A", 0, 1.0, 0, 0, 0.7, 15.0, 2.0, 0.0], [false, "2s1\u6c34B", 0, 1.0, 0, 0, 2.0, 15.0, 2.0, 0.0], [true, "2s1\u51b0A", 4, 1.0, 0, 0, 2.6, 15.0, 2.0, 0.0], [false, "2s1\u51b0B", 4, 1.0, 0, 0, 1.3, 15.0, 2.0, 0.0], [false, "\u521d\u59cb\u5f3a\u6c34", 0, 2.0, 0, 0, 0.4, 0.0, 1.7, 0.0], [false, "\u521d\u59cb\u5f3a\u51b0", 4, 2.0, 0, 0, 0.3, 0.0, 1.0, 0.0]]'
+            elif selection == '感电与扩散':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "2s\u6c34", 0, 1.0, 0, 2, 2.3, 15.0, 2.0, 0.0], [true, "2s\u96f7", 2, 1.0, 0, 2, 2.0, 15.0, 2.0, 0.0], [false, "2s\u98ce", 5, 1.0, 0, 2, 3.0, 15.0, 2.0, 0.0]]'
+            elif selection == '激化与冻结护草':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "1s\u6c34", 0, 1.0, 0, 0, 1.4, 15.0, 1.0, 0.0], [true, "2s\u8349", 3, 1.0, 0, 0, 2.0, 15.0, 2.0, 0.0], [false, "2s\u96f7", 2, 1.0, 0, 0, 0.9, 18.0, 2.0, 0.0], [false, "2s\u51b0", 4, 1.0, 0, 0, 0.9, 18.0, 2.0, 0.0]]'
+            elif selection == '草行久+水草雷前台':
+                set_string = '[1, [20.0, 5, false, true, false, false, true, true, true], [true, "\u884c\u79cb\u6c34\u7bad1", 0, 1.0, 0, 0, 1.3, 18.0, 1.0, 0.0], [true, "\u884c\u79cb\u6c34\u7bad2", 0, 1.0, 0, 0, 4.3, 15.0, 3.0, 0.0], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 0.1, 20.0, 2.5, 0.0], [true, "\u8349\u795eE", 3, 1.0, 0, 0, 0.1, 0.0, 1.7, 0.0], [true, "97\u96f7\u73af", 2, 1.0, 0, 0, 2.3, 15.0, 1.5, 2.5], [false, "1s\u6c34", 0, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0], [false, "1s\u8349", 3, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0]]'
+            elif selection == '心雷妲+水冰后台':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u5fc3\u6d77\u666e\u653b", 0, 1.0, 0, 0, 6.7, 10.0, 0.8, 0.0], [true, "\u5fc3\u6d77\u6c34\u6bcd", 0, 1.0, 0, 0, 0.0, 15.0, 2.0, 0.0], [true, "\u96f7\u795e\u534f\u540c", 2, 1.0, 2, 0, 0.2, 25.0, 0.9, 2.5], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 1.3, 25.0, 2.5, 0.0], [false, "\u591c\u5170", 0, 1.0, 0, 0, 4.3, 15.0, 1.0, 0.0], [false, "\u4f4e\u9891\u5f31\u51b0", 4, 1.0, 0, 0, 4.3, 10.0, 2.0, 0.0], [false, "\u9ad8\u9891\u5f31\u51b0", 4, 1.0, 0, 0, 5.5, 5.0, 1.0, 0.0]]'
+            elif selection == '燃草+水冰雷前台':
+                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u9999\u83f1\u9505\u5df4", 1, 1.0, 0, 0, 6.6, 6.0, 2.0, 0.0], [true, "\u9999\u83f1\u706b\u5708", 1, 1.0, 0, 0, 3.4, 14.0, 1.14, 0.0], [true, "\u8349\u795ee", 3, 1.0, 0, 0, 0.8, 0.0, 1.7, 0.0], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 0.8, 15.0, 2.5, 0.0], [false, "\u5f31\u51b01", 4, 1.0, 0, 0, 5.2, 12.0, 2.0, 0.0], [false, "\u5f31\u51b02", 4, 1.0, 0, 0, 5.5, 12.0, 2.0, 0.0], [false, "1s\u6c34", 0, 1.0, 0, 0, 5.3, 15.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 5.3, 15.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 5.6, 15.0, 1.0, 0.0]]'
+            elif selection == '心妮妲+草':
+                set_string = '[1, [20.0, 5, false, false, false, true, true, false, true], [true, "\u5fc3\u6d77\u666e\u653b", 0, 1.0, 0, 0, 6.7, 10.0, 0.8, 0.0], [true, "\u5fc3\u6d77\u6c34\u6bcd", 0, 1.0, 0, 2, 0.0, 18.0, 2.0, 0.0], [true, "\u59ae\u9732\u6c34\u73af", 0, 1.0, 2, 2, 1.2, 18.0, 2.0, 2.5], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 2, 1.3, 25.0, 2.5, 0.0], [true, "\u8349\u795eE", 3, 1.0, 0, 2, 1.3, 0.0, 1.0, 0.0], [true, "\u5fc3\u6d77\u5f3a\u6c34", 0, 2.0, 0, 2, 6.0, 0.0, 1.0, 0.0], [false, "3s\u8349", 3, 1.0, 0, 2, 3.3, 6.0, 3.0, 0.0], [false, "1s\u5355\u76ee\u6807\u8349", 3, 1.0, 0, 0, 3.3, 6.0, 1.0, 0.0]]'
+            elif selection == '感电与扩散':
+                set_string = ''
+            self.apply_setting(set_string)
+            self.info_logger.log_basic("成功加载预设："+selection)
+            if selection == '草行久+水草雷前台' or selection == '心雷妲+水冰后台':
+                self.info_logger.log_basic("请注意0.5s内单目标最多受到2次超绽放伤害")
         dlg.Destroy()
 
     def on_about(self, event):
@@ -287,14 +317,16 @@ class MainFrame(wx.Frame):
                       "\n"
                       "目前已知问题：\n"
                       "1. 超绽放从触发到命中的延迟没有考虑，目前为零。\n"
-                      "2. 目标受到元素反应伤害的CD未考虑，例如0.5秒内至多只能受到同一个触发来源的两次超绽放伤害。\n"
-                      "3. 对于同一时刻的反应，例如同时产生多个协同，先后顺序可能不准确；同时产生多元素扩散时，模拟器会按照反应顺序计算反应，游戏中的处理可能不同。请以游戏实际为准。",
+                      "2. 对于双目标，目前按照共用计时器处理，即无法分别计算附着CD。\n"
+                      "3. 目标受到元素反应伤害的CD未考虑，例如0.5秒内至多只能受到同一个触发来源的两次超绽放伤害。\n"
+                      "4. 对于同一时刻的反应，例如同时产生多个协同，先后顺序可能不准确；同时产生多元素扩散时，模拟器会按照反应顺序计算反应，游戏中的处理可能不同。请以游戏实际为准。",
                       "帮助",
                       wx.OK | wx.ICON_INFORMATION)
     def on_tip(self, event):
         wx.MessageBox("1. 如果只想让攻击触发一次，可以把持续时间设为0。\n"
                       "2. 研究燃烧反应时，推荐将精度设为0.01s，0.05s或0.25s，因为燃烧攻击的cd是0.25s。\n"
-                      "3. 如果加了太多空行，复制配置时不想包括，可以将空行的技能名删除，使其为空。",
+                      "3. 如果加了太多空行，复制配置时不想包括，可以将空行的技能名删除，使其为空。\n"
+                      "4. 目前没有设计减行的功能，如果需要请重启程序。",
                       "小技巧",
                       wx.OK | wx.ICON_INFORMATION)
     def on_save(self, event):
@@ -320,6 +352,9 @@ class MainFrame(wx.Frame):
         self.Close(True)
 
     def on_add_setting(self, event):
+        if len(self.attack_setting) == 10:
+            self.info_logger.log_basic("已到达上限，无法添加更多行。")
+            return
         self.add_setting(self.panel_setting, self.gs_atk_set)
         self.bs_setting.Layout()
 
@@ -341,11 +376,9 @@ class MainFrame(wx.Frame):
     def on_random(self, event):
         for atk_set in self.attack_setting:
             if atk_set.input_is_active.GetValue():
-                atk_set.input_time_start.SetValue(str(rand.randint(0, 30) / 10))
-                atk_set.input_attack_cd.SetValue(str(rand.randint(10, 20) / 10))
+                atk_set.input_time_start.SetValue(str(rand.randint(0, 50) / 10))
+                # atk_set.input_attack_cd.SetValue(str(rand.randint(10, 20) / 10))
 
-    def on_link1(self, event):
-        wx.LaunchDefaultBrowser('https://bbs.nga.cn/read.php?tid=33231790')
 
 class MainApp(wx.App):
 
