@@ -4,3 +4,5 @@
 木有
 # 版权
 本程序基于GPL协议发布。
+# 采用的python库
+wxpython, matplotlib, numpy
