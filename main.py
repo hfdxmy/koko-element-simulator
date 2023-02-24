@@ -8,7 +8,7 @@ import pyperclip
 import monitor
 import setting
 import random as rand
-from const import APP_TITLE, SETTING_TITLE, VERSION, SETTING_VERSION, ACCEPTABLE_SETTING_VERSION
+from const import APP_TITLE, SETTING_TITLE, SETTING_VERSION, ACCEPTABLE_SETTING_VERSION, PRESET_NAME, PRESET_DICT
 # from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 # from matplotlib.figure import Figure
@@ -224,12 +224,13 @@ class MainFrame(wx.Frame):
         help_item = wx.MenuItem(help_menu, wx.ID_ANY, text="帮助", helpString="", kind=wx.ITEM_NORMAL)
         tip_item = wx.MenuItem(help_menu, wx.ID_ANY, text="提示", helpString="", kind=wx.ITEM_NORMAL)
         about_item = wx.MenuItem(help_menu, wx.ID_ANY, text="关于", helpString="", kind=wx.ITEM_NORMAL)
-        link_names = ["高等元素论 by Shallow夢", "高等元素论（草反应） by 佳佳妹妹。", "反应优先级 by tesiacoil", '元素附着论 by tesiacoil', '冻结反应机制 by Shallow夢']
+        link_names = ["高等元素论 by Shallow夢", "高等元素论（草反应） by 佳佳妹妹。", "反应优先级 by tesiacoil", '元素附着论 by tesiacoil', '冻结反应机制 by Shallow夢', '项目Github']
         link_addresses = ['https://bbs.nga.cn/read.php?tid=24400590',
                           'https://bbs.nga.cn/read.php?tid=33231790',
                           'https://bbs.nga.cn/read.php?tid=32876825',
                           'https://bbs.nga.cn/read.php?tid=31217959',
-                          'https://bbs.nga.cn/read.php?tid=29632439']
+                          'https://bbs.nga.cn/read.php?tid=29632439',
+                          'https://github.com/hfdxmy/koko-element-simulator']
         link_items = [wx.MenuItem(help_menu, wx.ID_ANY, text=name, helpString="", kind=wx.ITEM_NORMAL) for name in link_names]
 
         file_menu.Append(run_item)
@@ -260,33 +261,11 @@ class MainFrame(wx.Frame):
         for i in range(len(link_items)):
             self.Bind(wx.EVT_MENU, link_funcs[i], link_items[i])
 
-
     def on_preset_select(self, event):
-        dlg = wx.SingleChoiceDialog(self, "请选择预设", "加载预设", ["水火雷草冰反应炉", "胡桃+夜兰/行秋", "水冰冻结", "感电与扩散", "激化与冻结护草", "草行久+水草雷前台", "心雷妲+水冰后台", "心妮妲+草", "燃草+水冰雷前台", "重置"])
+        dlg = wx.SingleChoiceDialog(self, "请选择预设", "加载预设", PRESET_NAME)
         if dlg.ShowModal() == wx.ID_OK:
             selection = dlg.GetStringSelection()
-            if selection == '水火雷草冰反应炉':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u6c34", 0, 1.0, 0, 0, 1.5, 15.0, 1.3, 0.0], [true, "\u706b", 1, 1.0, 0, 0, 2.1, 15.0, 1.5, 0.0], [true, "\u96f7", 2, 1.0, 0, 0, 0.9, 15.0, 1.1, 0.0], [true, "\u8349", 3, 1.0, 0, 0, 1.3, 15.0, 1.7, 0.0], [true, "\u51b0", 4, 1.0, 0, 0, 0.8, 15.0, 1.9, 0.0]]'
-            elif selection == '重置':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u6c34", 0, 1.0, 0, 0, 1.9, 15.0, 1.2, 0.0], [true, "\u706b", 1, 1.0, 0, 0, 2.6, 15.0, 1.8, 0.0], [true, "\u96f7", 2, 1.0, 0, 0, 2.1, 15.0, 1.5, 0.0], [false, "\u8349", 3, 1.0, 0, 0, 3.0, 15.0, 1.3, 0.0], [false, "\u51b0", 4, 1.0, 0, 0, 0.7, 15.0, 1.8, 0.0]]'
-            elif selection == '胡桃+夜兰/行秋':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u591c\u5170\u6c34\u7bad", 0, 1.0, 0, 0, 0.3, 15.0, 1.0, 0.0], [true, "\u80e1\u6843A", 1, 1.0, 0, 0, 2.0, 9.0, 1.0, 2.5], [true, "\u80e1\u6843\u91cd", 1, 1.0, 0, 0, 2.1, 9.0, 1.0, 0.0], [false, "\u8840\u6885\u9999", 1, 1.0, 0, 0, 2.2, 12.0, 4.0, 0.0], [false, "\u591c\u51702\u547d", 0, 1.0, 0, 0, 0.3, 15.0, 2.0, 0.0], [false, "\u884c\u79cb\u6c34\u7bad1", 0, 1.0, 0, 0, 0.3, 18.0, 1.0, 0.0], [false, "\u884c\u79cb\u6c34\u7bad2", 0, 1.0, 0, 0, 3.3, 15.0, 3.0, 0.0]]'
-            elif selection == '水冰冻结':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "2s1\u6c34A", 0, 1.0, 0, 0, 0.7, 15.0, 2.0, 0.0], [false, "2s1\u6c34B", 0, 1.0, 0, 0, 2.0, 15.0, 2.0, 0.0], [true, "2s1\u51b0A", 4, 1.0, 0, 0, 2.6, 15.0, 2.0, 0.0], [false, "2s1\u51b0B", 4, 1.0, 0, 0, 1.3, 15.0, 2.0, 0.0], [false, "\u521d\u59cb\u5f3a\u6c34", 0, 2.0, 0, 0, 0.4, 0.0, 1.7, 0.0], [false, "\u521d\u59cb\u5f3a\u51b0", 4, 2.0, 0, 0, 0.3, 0.0, 1.0, 0.0]]'
-            elif selection == '感电与扩散':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "2s\u6c34", 0, 1.0, 0, 2, 2.3, 15.0, 2.0, 0.0], [true, "2s\u96f7", 2, 1.0, 0, 2, 2.0, 15.0, 2.0, 0.0], [false, "2s\u98ce", 5, 1.0, 0, 2, 3.0, 15.0, 2.0, 0.0]]'
-            elif selection == '激化与冻结护草':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "1s\u6c34", 0, 1.0, 0, 0, 1.4, 15.0, 1.0, 0.0], [true, "2s\u8349", 3, 1.0, 0, 0, 2.0, 15.0, 2.0, 0.0], [false, "2s\u96f7", 2, 1.0, 0, 0, 0.9, 18.0, 2.0, 0.0], [false, "2s\u51b0", 4, 1.0, 0, 0, 0.9, 18.0, 2.0, 0.0]]'
-            elif selection == '草行久+水草雷前台':
-                set_string = '[1, [20.0, 5, false, true, false, false, true, true, true], [true, "\u884c\u79cb\u6c34\u7bad1", 0, 1.0, 0, 0, 1.3, 18.0, 1.0, 0.0], [true, "\u884c\u79cb\u6c34\u7bad2", 0, 1.0, 0, 0, 4.3, 15.0, 3.0, 0.0], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 0.1, 20.0, 2.5, 0.0], [true, "\u8349\u795eE", 3, 1.0, 0, 0, 0.1, 0.0, 1.7, 0.0], [true, "97\u96f7\u73af", 2, 1.0, 0, 0, 2.3, 15.0, 1.5, 2.5], [false, "1s\u6c34", 0, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0], [false, "1s\u8349", 3, 1.0, 0, 0, 3.0, 12.0, 1.0, 0.0]]'
-            elif selection == '心雷妲+水冰后台':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u5fc3\u6d77\u666e\u653b", 0, 1.0, 0, 0, 6.7, 10.0, 0.8, 0.0], [true, "\u5fc3\u6d77\u6c34\u6bcd", 0, 1.0, 0, 0, 0.0, 15.0, 2.0, 0.0], [true, "\u96f7\u795e\u534f\u540c", 2, 1.0, 2, 0, 0.2, 25.0, 0.9, 2.5], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 1.3, 25.0, 2.5, 0.0], [false, "\u591c\u5170", 0, 1.0, 0, 0, 4.3, 15.0, 1.0, 0.0], [false, "\u4f4e\u9891\u5f31\u51b0", 4, 1.0, 0, 0, 4.3, 10.0, 2.0, 0.0], [false, "\u9ad8\u9891\u5f31\u51b0", 4, 1.0, 0, 0, 5.5, 5.0, 1.0, 0.0]]'
-            elif selection == '燃草+水冰雷前台':
-                set_string = '[1, [20.0, 5, false, false, false, false, true, true, true], [true, "\u9999\u83f1\u9505\u5df4", 1, 1.0, 0, 0, 6.6, 6.0, 2.0, 0.0], [true, "\u9999\u83f1\u706b\u5708", 1, 1.0, 0, 0, 3.4, 14.0, 1.14, 0.0], [true, "\u8349\u795ee", 3, 1.0, 0, 0, 0.8, 0.0, 1.7, 0.0], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 0, 0.8, 15.0, 2.5, 0.0], [false, "\u5f31\u51b01", 4, 1.0, 0, 0, 5.2, 12.0, 2.0, 0.0], [false, "\u5f31\u51b02", 4, 1.0, 0, 0, 5.5, 12.0, 2.0, 0.0], [false, "1s\u6c34", 0, 1.0, 0, 0, 5.3, 15.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 5.3, 15.0, 1.0, 0.0], [false, "1s\u96f7", 2, 1.0, 0, 0, 5.6, 15.0, 1.0, 0.0]]'
-            elif selection == '心妮妲+草':
-                set_string = '[1, [20.0, 5, false, false, false, true, true, false, true], [true, "\u5fc3\u6d77\u666e\u653b", 0, 1.0, 0, 0, 6.7, 10.0, 0.8, 0.0], [true, "\u5fc3\u6d77\u6c34\u6bcd", 0, 1.0, 0, 2, 0.0, 18.0, 2.0, 0.0], [true, "\u59ae\u9732\u6c34\u73af", 0, 1.0, 2, 2, 1.2, 18.0, 2.0, 2.5], [true, "\u8349\u795e\u534f\u540c", 3, 1.5, 1, 2, 1.3, 25.0, 2.5, 0.0], [true, "\u8349\u795eE", 3, 1.0, 0, 2, 1.3, 0.0, 1.0, 0.0], [true, "\u5fc3\u6d77\u5f3a\u6c34", 0, 2.0, 0, 2, 6.0, 0.0, 1.0, 0.0], [false, "3s\u8349", 3, 1.0, 0, 2, 3.3, 6.0, 3.0, 0.0], [false, "1s\u5355\u76ee\u6807\u8349", 3, 1.0, 0, 0, 3.3, 6.0, 1.0, 0.0]]'
-            elif selection == '感电与扩散':
-                set_string = ''
+            set_string = PRESET_DICT[selection]
             self.apply_setting(set_string)
             self.info_logger.log_basic("成功加载预设："+selection)
             if selection == '草行久+水草雷前台' or selection == '心雷妲+水冰后台':
@@ -306,8 +285,8 @@ class MainFrame(wx.Frame):
                       "“忽略目标2”生效时，所有计算均为单目标。”记录附着“等生效时，日志将输出相应信息。\n"
                       "2. 对于每条技能，”启用“关闭时则不进行计算。”名称”可自定义。“元素量”不超过4。"
                       "”起始时间“和”冷却时间“表示生效时间段。”攻击冷却“表示至少经过多少时间才能触发一次攻击，不小于0.5秒。”附着冷却“表示至少经过多少时间，下一次攻击才能上元素。\n"
-                      "3. ”攻击方式“中，“定时触发”表示冷却时间一到就产生一次攻击，”草神协同“表示目标触发元素反应或受到草原核伤害后触发，”雷神协同“表示目标受到技能伤害后触发，"
-                      "”阿贝多协同“表示目标受到技能伤害和反应伤害后触发。名称仅代表触发形式，不要求具体角色。\n"
+                      "3. ”攻击方式“中，“定时触发”表示冷却时间一到就产生一次攻击，”草神协同“表示目标触发元素反应或受到草原核伤害后触发，”雷神协同“表示目标受到除感电以外的攻击后触发，"
+                      "”阿贝多协同“表示目标受到任何伤害后触发。名称仅代表触发形式，不要求具体角色。\n"
                       "\n"
                       "特殊处理：\n"
                       "1. 超载、超导、原绽放、烈绽放反应视为对双目标的伤害。扩散反应为对自身无元素的伤害，对其余目标带有相应元素的伤害。由于本模拟器不关注伤害，故水扩散无影响。\n"
@@ -319,7 +298,7 @@ class MainFrame(wx.Frame):
                       "1. 超绽放从触发到命中的延迟没有考虑，目前为零。\n"
                       "2. 对于双目标，目前按照共用计时器处理，即无法分别计算附着CD。\n"
                       "3. 目标受到元素反应伤害的CD未考虑，例如0.5秒内至多只能受到同一个触发来源的两次超绽放伤害。\n"
-                      "4. 对于同一时刻的反应，例如同时产生多个协同，先后顺序可能不准确；同时产生多元素扩散时，模拟器会按照反应顺序计算反应，游戏中的处理可能不同。请以游戏实际为准。",
+                      "4. 对于同一时刻的反应，先后顺序可能不准确。能够确定的是草神协同先于雷神协同，其余多元素扩散情况，或是其他特殊情况，可能存在与游戏内现象不符合的问题。请以游戏内为准。",
                       "帮助",
                       wx.OK | wx.ICON_INFORMATION)
     def on_tip(self, event):
