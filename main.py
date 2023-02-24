@@ -282,7 +282,7 @@ class MainFrame(wx.Frame):
     def on_update(self, event):
         wx.MessageBox("V0.91:\n"
                       "-修复燃烧持续伤害会触发草神协同和雷神协同的bug。\n"
-                      "-修复燃烧挂火会将燃烧触发者改为‘燃烧’的bug。"
+                      "-修复燃烧挂火会将燃烧触发者改为‘燃烧’的bug。\n"
                       "-添加更新记录。\n"
                       "V0.90:\n"
                       "-首次发布。",
