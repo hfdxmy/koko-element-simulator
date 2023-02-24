@@ -191,7 +191,7 @@ class Monitor:
         reaction_flag = True
 
         if atk.element == '水':  # 水攻击
-            if tgt.element[1] > 0:  # 目标有火元素附着
+            if tgt.element[1] > 0 or tgt.element[7] > 0:  # 目标有火元素附着
                 self.reaction_vaporize(tgt, atk)
                 if atk.element_mass > 0.01 and (tgt.element[4] > 0 or tgt.element[6] > 0):  # 草元素或激元素
                     self.reaction_bloom(tgt, atk)
@@ -278,7 +278,7 @@ class Monitor:
                 self.log_quicken("%s在%s触发超激化" % (atk.name, tgt.name))
                 quicken_flag = True
 
-            if tgt.element[1] > 0:  # 目标有火附着，超载
+            if tgt.element[1] > 0 or tgt.element[7] > 0:  # 目标有火附着，超载
                 self.reaction_overload(tgt, atk)
                 if atk.element_mass > 0.01 and tgt.element[4] > 0:
                     self.reaction_quicken(tgt, atk)
