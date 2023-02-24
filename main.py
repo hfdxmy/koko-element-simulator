@@ -225,13 +225,14 @@ class MainFrame(wx.Frame):
         tip_item = wx.MenuItem(help_menu, wx.ID_ANY, text="提示", helpString="", kind=wx.ITEM_NORMAL)
         update_item = wx.MenuItem(help_menu, wx.ID_ANY, text="更新记录", helpString="", kind=wx.ITEM_NORMAL)
         about_item = wx.MenuItem(help_menu, wx.ID_ANY, text="关于", helpString="", kind=wx.ITEM_NORMAL)
-        link_names = ["高等元素论 by Shallow夢", "高等元素论（草反应） by 佳佳妹妹。", "反应优先级 by tesiacoil", '元素附着论 by tesiacoil', '冻结反应机制 by Shallow夢', '项目Github']
+        link_names = ["高等元素论 by Shallow夢", "高等元素论（草反应） by 佳佳妹妹。", "反应优先级 by tesiacoil", '元素附着论 by tesiacoil', '冻结反应机制 by Shallow夢', '项目Github', '本项目NGA页']
         link_addresses = ['https://bbs.nga.cn/read.php?tid=24400590',
                           'https://bbs.nga.cn/read.php?tid=33231790',
                           'https://bbs.nga.cn/read.php?tid=32876825',
                           'https://bbs.nga.cn/read.php?tid=31217959',
                           'https://bbs.nga.cn/read.php?tid=29632439',
-                          'https://github.com/hfdxmy/koko-element-simulator']
+                          'https://github.com/hfdxmy/koko-element-simulator',
+                          'https://bbs.nga.cn/read.php?tid=35483754']
         link_items = [wx.MenuItem(help_menu, wx.ID_ANY, text=name, helpString="", kind=wx.ITEM_NORMAL) for name in link_names]
 
         file_menu.Append(run_item)
