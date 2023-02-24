@@ -249,7 +249,8 @@ class Monitor:
                 if atk.element_mass * 0.8 > tgt.element[1]:
                     tgt.element[1] = atk.element_mass * 0.8
                     tgt.decrease_spd[1] = decrease_speed(atk.element, atk.element_mass)  # 3.0后衰减速度也覆盖
-                    tgt.burning_source = atk  # 刷新来源
+                    if atk.name != '燃烧' or atk.tag != '剧变':
+                        tgt.burning_source = atk  # 刷新来源
                     self.log_apply("%s刷新%s的火元素量，%s" % (atk.name, tgt.name, tgt.log_element_change()))
                 reaction_flag = False
 

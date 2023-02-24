@@ -282,6 +282,7 @@ class MainFrame(wx.Frame):
     def on_update(self, event):
         wx.MessageBox("V0.91:\n"
                       "-修复燃烧持续伤害会触发草神协同和雷神协同的bug。\n"
+                      "-修复燃烧挂火会将燃烧触发者改为‘燃烧’的bug。"
                       "-添加更新记录。\n"
                       "V0.90:\n"
                       "-首次发布。",
@@ -314,6 +315,7 @@ class MainFrame(wx.Frame):
                       "4. 对于同一时刻的反应，先后顺序可能不准确。能够确定的是草神协同先于雷神协同，其余多元素扩散情况，或是其他特殊情况，可能存在与游戏内现象不符合的问题。请以游戏内为准。",
                       "帮助",
                       wx.OK | wx.ICON_INFORMATION)
+
     def on_tip(self, event):
         wx.MessageBox("1. 如果只想让攻击触发一次，可以把持续时间设为0。\n"
                       "2. 研究燃烧反应时，推荐将精度设为0.01s，0.05s或0.25s，因为燃烧攻击的cd是0.25s。\n"
@@ -321,6 +323,7 @@ class MainFrame(wx.Frame):
                       "4. 目前没有设计减行的功能，如果需要请重启程序。",
                       "小技巧",
                       wx.OK | wx.ICON_INFORMATION)
+
     def on_save(self, event):
         string_to_save = "---模拟配置代码---\n"
         string_to_save += self.copy_setting()
