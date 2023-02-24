@@ -120,6 +120,7 @@ class Target:
         self.monitor.attack_list.append(attack.Attack('感电', '雷', target=self.tgt_id, id=self.electro_charged_source.id, tag='剧变'))
         self.coordinate('nahida')
 
+
     def log_element_change(self):
         # print("%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string()))
         return "%s：(%s)->(%s)" % (self.name, self.element_string, self.refresh_element_string())

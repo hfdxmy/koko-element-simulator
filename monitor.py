@@ -125,11 +125,14 @@ class Monitor:
                         tgt.stat_attack[atk.id][1] += 1  # 记录一次元素攻击
 
                 if atk.tag == '角色':
-                    tgt.coordinate('shogun')
                     tgt.stat_attack[atk.id][0] += 1  # 记录一次攻击
                     # 超烈绽放
                     if atk.element == '火' or atk.element == '雷':
                         self.dcm.core_reaction(self.target_list[0], atk)
+
+                # 除了感电都能触发雷神协同
+                if atk.name != '感电':
+                    tgt.coordinate('shogun')
 
                 # 所有类型伤害都能触发的阿贝多受击协同
                 tgt.coordinate('albedo')
